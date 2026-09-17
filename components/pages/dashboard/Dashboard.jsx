@@ -5,7 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Pencil, ExternalLink, LogOut, Camera, Share2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Pencil,
+  ExternalLink,
+  LogOut,
+  Camera,
+  Share2,
+} from "lucide-react";
 import ProfileTab from "./tabs/ProfileTab";
 import Container from "../../shared/Container";
 import { createClient } from "../../../lib/client";
@@ -31,7 +38,8 @@ export default function Dashboard() {
     tasksCompleted: 0,
     status: false,
     avatarUrl: null,
-    coverUrl: "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070",
+    coverUrl:
+      "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070",
   });
 
   useEffect(() => {
@@ -51,7 +59,7 @@ export default function Dashboard() {
         const { data: profDataArray, error } = await supabase
           .from("professionals")
           .select(
-            "id, full_name, profession, headline, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url"
+            "id, full_name, profession, bio, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url",
           )
           .eq("user_id", user.id)
           .limit(1);
@@ -64,14 +72,16 @@ export default function Dashboard() {
             profileId: profData.id,
             name: profData.full_name || defaultName,
             profession: profData.profession || "Professional",
-            headline: profData.headline || "Update your profile",
+            headline: profData.bio || "Update your profile",
             followers: profData.followers_count || 0,
             following: profData.following_count || 0,
             ratingsCount: profData.ratings_count || 0,
             tasksCompleted: profData.orders_count || 0,
             status: profData.is_verified || false,
             avatarUrl: profData.avatar_url || defaultAvatar,
-            coverUrl: profData.cover_image_url || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070",
+            coverUrl:
+              profData.cover_image_url ||
+              "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070",
           });
         } else {
           setUserProfile((prev) => ({
@@ -87,89 +97,100 @@ export default function Dashboard() {
     fetchProfile();
   }, [refreshKey]);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-  };
-
   const uploadDirectFile = async (e, type) => {
     const file = e.target.files?.[0];
     if (!file || !userProfile.id) return;
 
-    if (type === 'avatar') setUploadingAvatar(true);
-    if (type === 'cover') setUploadingCover(true);
+    if (type === "avatar") setUploadingAvatar(true);
+    if (type === "cover") setUploadingCover(true);
 
     const supabase = createClient();
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `${userProfile.id}-${type}-${Date.now()}.${fileExt}`;
-    
+
     // 1. Upload to storage
-    const { error: uploadError } = await supabase.storage.from('kyc-documents').upload(fileName, file, { upsert: true });
-    
+    const { error: uploadError } = await supabase.storage
+      .from("kyc-documents")
+      .upload(fileName, file, { upsert: true });
+
     if (uploadError) {
       toast.error(`Failed to upload ${type}`);
-      if (type === 'avatar') setUploadingAvatar(false);
-      if (type === 'cover') setUploadingCover(false);
+      if (type === "avatar") setUploadingAvatar(false);
+      if (type === "cover") setUploadingCover(false);
       return;
     }
-    
-    const { data: { publicUrl } } = supabase.storage.from('kyc-documents').getPublicUrl(fileName);
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("kyc-documents").getPublicUrl(fileName);
 
     // 2. Update professionals table
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    const updatePayload = type === 'avatar' 
-      ? { avatar_url: publicUrl } 
-      : { cover_image_url: publicUrl };
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { error: dbError } = await supabase
-      .from('professionals')
-      .upsert({ 
-        user_id: userProfile.id, 
-        full_name: userProfile.name === "Loading..." ? (user.user_metadata?.full_name || "New Professional") : userProfile.name,
+    const updatePayload =
+      type === "avatar"
+        ? { avatar_url: publicUrl }
+        : { cover_image_url: publicUrl };
+
+    const { error: dbError } = await supabase.from("professionals").upsert(
+      {
+        user_id: userProfile.id,
+        full_name:
+          userProfile.name === "Loading..."
+            ? user.user_metadata?.full_name || "New Professional"
+            : userProfile.name,
         email: user?.email || "",
-        ...updatePayload 
-      }, { onConflict: 'user_id' });
+        ...updatePayload,
+      },
+      { onConflict: "user_id" },
+    );
 
     if (dbError) {
       toast.error(`Failed to save ${type} to profile`);
     } else {
-      toast.success(`${type === 'avatar' ? 'Profile picture' : 'Cover image'} updated!`);
-      setRefreshKey(r => r + 1); // Trigger refetch
+      toast.success(
+        `${type === "avatar" ? "Profile picture" : "Cover image"} updated!`,
+      );
+      setRefreshKey((r) => r + 1); // Trigger refetch
     }
 
-    if (type === 'avatar') setUploadingAvatar(false);
-    if (type === 'cover') setUploadingCover(false);
+    if (type === "avatar") setUploadingAvatar(false);
+    if (type === "cover") setUploadingCover(false);
   };
 
   return (
     <div className="min-h-screen bg-background py-12">
-      <Container className="space-y-8">
+      <Container className="flex flex-col gap-4 lg:flex-row">
         {/* Top Profile Header Card - Social Media Style */}
-        <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden relative">
+        <div className="bg-card border border-border rounded-xl overflow-hidden relative h-fit">
           {/* Cover Banner */}
           <div className="h-48 md:h-64 w-full bg-muted relative group">
-            <img 
-              src={userProfile.coverUrl} 
-              alt="Cover" 
-              className={`w-full h-full object-cover transition-opacity ${uploadingCover ? 'opacity-50' : 'opacity-100'}`}
+            <img
+              src={userProfile.coverUrl}
+              alt="Cover"
+              className={`w-full h-full object-cover transition-opacity ${uploadingCover ? "opacity-50" : "opacity-100"}`}
             />
             {/* Inline Cover Edit Overlay */}
-            <div 
+            <div
               className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              onClick={() => document.getElementById("header-cover-upload").click()}
+              onClick={() =>
+                document.getElementById("header-cover-upload").click()
+              }
             >
               <div className="flex flex-col items-center text-white">
                 <Camera className="w-8 h-8 mb-2" />
-                <span className="font-medium text-sm drop-shadow-md">Change Cover Image</span>
+                <span className="font-medium text-sm drop-shadow-md">
+                  Change Cover Image
+                </span>
               </div>
               <input
                 type="file"
                 id="header-cover-upload"
                 className="hidden"
                 accept="image/*"
-                onChange={(e) => uploadDirectFile(e, 'cover')}
+                onChange={(e) => uploadDirectFile(e, "cover")}
               />
             </div>
           </div>
@@ -177,27 +198,39 @@ export default function Dashboard() {
           {/* Profile Details Area */}
           <div className="px-6 pb-8 md:px-12 relative flex flex-col items-center text-center">
             {/* Centered Avatar overlapping the banner */}
-            <div className="relative -mt-16 md:-mt-20 mb-4 group cursor-pointer" onClick={() => document.getElementById("header-avatar-upload").click()}>
-              <Avatar className={`w-32 h-32 md:w-40 md:h-40 border-4 border-card shadow-xl transition-opacity ${uploadingAvatar ? 'opacity-50' : 'opacity-100'}`}>
-                <AvatarImage src={userProfile.avatarUrl} alt={userProfile.name} />
+            <div
+              className="relative -mt-16 md:-mt-20 mb-4 group cursor-pointer"
+              onClick={() =>
+                document.getElementById("header-avatar-upload").click()
+              }
+            >
+              <Avatar
+                className={`w-32 h-32 md:w-40 md:h-40 border-4 border-card shadow-xl transition-opacity ${uploadingAvatar ? "opacity-50" : "opacity-100"}`}
+              >
+                <AvatarImage
+                  src={userProfile.avatarUrl}
+                  alt={userProfile.name}
+                />
                 <AvatarFallback className="bg-primary/20 text-primary text-4xl font-bold">
                   {userProfile.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              
+
               {/* Edit overlay */}
               <div className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <Camera className="w-6 h-6 text-white mb-1" />
-                <span className="text-white text-[10px] font-medium">Change</span>
+                <span className="text-white text-[10px] font-medium">
+                  Change
+                </span>
               </div>
               <input
                 type="file"
                 id="header-avatar-upload"
                 className="hidden"
                 accept="image/*"
-                onChange={(e) => uploadDirectFile(e, 'avatar')}
+                onChange={(e) => uploadDirectFile(e, "avatar")}
               />
-              
+
               {/* Verification Badge */}
               {userProfile.status === true && (
                 <div className="absolute -bottom-2 -right-2 bg-card rounded-full p-1.5 shadow-xl z-20">
@@ -238,7 +271,10 @@ export default function Dashboard() {
                 Share Profile
               </Button>
               <Button
-                onClick={() => userProfile.profileId && router.push(`/professionals/${userProfile.profileId}`)}
+                onClick={() =>
+                  userProfile.profileId &&
+                  router.push(`/professionals/${userProfile.profileId}`)
+                }
                 disabled={!userProfile.profileId}
                 className="gap-2 rounded-xl"
               >
@@ -248,7 +284,7 @@ export default function Dashboard() {
             </div>
 
             {/* Stats Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12 mt-8 pt-6 border-t border-border w-full max-w-3xl mx-auto">
+            <div className="grid grid-cols-3 md:grid-cols-4 gap-6 md:gap-12 mt-8 pt-6 border-t border-border w-full max-w-3xl mx-auto">
               <div className="flex flex-col items-center">
                 <span className="font-bold text-foreground text-xl md:text-2xl">
                   {userProfile.followers}
@@ -278,7 +314,7 @@ export default function Dashboard() {
         </div>
 
         {/* Dynamic Navigation Tabs */}
-        <Tabs defaultValue="profile" className="w-full mt-6">
+        <Tabs defaultValue="profile" className="w-full">
           <TabsList className="w-full justify-start h-auto p-0 rounded-none border-b border-border bg-transparent overflow-x-auto flex-nowrap scrollbar-hide">
             <TabsTrigger
               value="profile"
@@ -317,7 +353,7 @@ export default function Dashboard() {
               value="profile"
               className="m-0 border-none outline-none"
             >
-              <ProfileTab onProfileUpdate={() => setRefreshKey(r => r + 1)} />
+              <ProfileTab onProfileUpdate={() => setRefreshKey((r) => r + 1)} />
             </TabsContent>
             <TabsContent
               value="orders"

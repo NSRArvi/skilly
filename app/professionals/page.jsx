@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Container from "../../components/shared/Container";
 import ProfessionalsCard from "../../components/pages/home/ProfessionalsCard";
 import { createClient } from "../../lib/client";
-import { Loader2 } from "lucide-react";
 
 export default function ProfessionalsPage() {
   const [professionals, setProfessionals] = useState([]);
@@ -13,26 +12,14 @@ export default function ProfessionalsPage() {
   useEffect(() => {
     const fetchProfessionals = async () => {
       const supabase = createClient();
-      
-      const { data, error } = await supabase
+
+      const { data } = await supabase
         .from("professionals")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (data) {
-        // Map backend data to the format ProfessionalsCard expects
-        const mappedData = data.map(prof => ({
-          id: prof.id,
-          name: prof.full_name || "Unknown Professional",
-          title: prof.headline || prof.profession || "Independent Professional",
-          rating: "5.0", // Hardcoded until review system is in place
-          reviews: prof.ratings_count?.toString() || "0",
-          skills: prof.skills || [],
-          price: prof.hourly_rate?.toString() || prof.daily_rate?.toString() || "Negotiable",
-          avatar: prof.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(prof.full_name || 'U')}&background=random`,
-        }));
-        
-        setProfessionals(mappedData);
+        setProfessionals(data);
       }
       setLoading(false);
     };
@@ -48,14 +35,18 @@ export default function ProfessionalsPage() {
             Discover Professionals
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl">
-            Browse through our directory of verified experts ready to help you with your next big project.
+            Browse through our directory of verified experts ready to help you
+            with your next big project.
           </p>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between h-[320px] animate-pulse">
+              <div
+                key={i}
+                className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between h-[320px] animate-pulse"
+              >
                 <div>
                   <div className="flex gap-4 mb-6">
                     <div className="h-12 w-12 rounded-full bg-muted flex-shrink-0"></div>
@@ -88,8 +79,12 @@ export default function ProfessionalsPage() {
           </div>
         ) : (
           <div className="text-center py-24 bg-card border border-border rounded-3xl">
-            <h3 className="text-xl font-semibold text-foreground mb-2">No professionals found</h3>
-            <p className="text-muted-foreground">Check back later as more experts join Skilly.</p>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No professionals found
+            </h3>
+            <p className="text-muted-foreground">
+              Check back later as more experts join Skilly.
+            </p>
           </div>
         )}
       </Container>

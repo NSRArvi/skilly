@@ -28,7 +28,6 @@ export default function ProfileTab({ onProfileUpdate }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [profession, setProfession] = useState("");
-  const [shortBio, setShortBio] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
   const [gender, setGender] = useState("prefer-not");
   const [phoneCode, setPhoneCode] = useState("+880");
@@ -61,11 +60,15 @@ export default function ProfileTab({ onProfileUpdate }) {
   const [dailyRate, setDailyRate] = useState("");
   const [experience, setExperience] = useState([]);
   const [education, setEducation] = useState([]);
+  const [courses, setCourses] = useState([]);
 
   const [isGoogleAuth, setIsGoogleAuth] = useState(false);
 
   const [skills, setSkills] = useState([]);
   const [newSkill, setNewSkill] = useState("");
+
+  const [skillsFor, setSkillsFor] = useState([]);
+  const [newSkillFor, setNewSkillFor] = useState("");
 
   const [frontId, setFrontId] = useState(null);
   const [backId, setBackId] = useState(null);
@@ -99,7 +102,6 @@ export default function ProfileTab({ onProfileUpdate }) {
           setFullName(profData.full_name || defaultName);
           setEmail(profData.email || defaultEmail);
           setProfession(profData.profession || "");
-          setShortBio(profData.headline || "");
           setHourlyRate(
             profData.hourly_rate ? String(profData.hourly_rate) : "",
           );
@@ -107,6 +109,8 @@ export default function ProfileTab({ onProfileUpdate }) {
           setDateOfBirth(profData.date_of_birth || "");
           setExperience(profData.experience || []);
           setEducation(profData.education || []);
+          setCourses(profData.courses || []);
+          setRatingMessage(profData.rating_message || "");
           setPresentAddress(
             profData.present_address || {
               country: "",
@@ -130,6 +134,7 @@ export default function ProfileTab({ onProfileUpdate }) {
           setPhoneCode(profData.phone_code || "+880");
           setPhoneNumber(profData.phone_number || "");
           setSkills(profData.skills || []);
+          setSkillsFor(profData.skills_for || []);
           setSocialLinkedin(profData.social_linkedin || "");
           setSocialGithub(profData.social_github || "");
           setSocialTwitter(profData.social_twitter || "");
@@ -167,6 +172,18 @@ export default function ProfileTab({ onProfileUpdate }) {
 
   const handleRemoveSkill = (skillToRemove) => {
     setSkills(skills.filter((s) => s !== skillToRemove));
+  };
+
+  const handleAddSkillFor = (e) => {
+    e.preventDefault();
+    if (newSkillFor.trim() && !skillsFor.includes(newSkillFor.trim())) {
+      setSkillsFor([...skillsFor, newSkillFor.trim()]);
+      setNewSkillFor("");
+    }
+  };
+
+  const handleRemoveSkillFor = (skillToRemove) => {
+    setSkillsFor(skillsFor.filter((s) => s !== skillToRemove));
   };
 
   const handleFileDrop = (e, setFile) => {
@@ -220,12 +237,12 @@ export default function ProfileTab({ onProfileUpdate }) {
       full_name: fullName,
       email: email,
       profession: profession,
-      headline: shortBio,
       hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
       daily_rate: dailyRate ? parseFloat(dailyRate) : null,
       date_of_birth: dateOfBirth || null,
       experience: experience,
       education: education,
+      courses: courses,
       present_address: presentAddress,
       permanent_address: permanentAddress,
       bio: bio,
@@ -233,13 +250,12 @@ export default function ProfileTab({ onProfileUpdate }) {
       phone_code: phoneCode,
       phone_number: phoneNumber,
       skills: skills,
+      skills_for: skillsFor,
       social_linkedin: socialLinkedin,
       social_github: socialGithub,
       social_twitter: socialTwitter,
       social_facebook: socialFacebook,
       id_type: idType,
-      avatar_url:
-        user.user_metadata?.picture || user.user_metadata?.avatar_url || null,
     };
 
     if (frontUrl) updateData.id_front_url = frontUrl;
@@ -262,7 +278,7 @@ export default function ProfileTab({ onProfileUpdate }) {
   return (
     <form onSubmit={handleSave} className="space-y-10">
       {/* Basic Information */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
         <h2 className="text-xl font-bold text-foreground">Basic Information</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -295,21 +311,11 @@ export default function ProfileTab({ onProfileUpdate }) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground">Profession / Title</Label>
+            <Label className="text-foreground">Profession</Label>
             <Input
               value={profession}
               onChange={(e) => setProfession(e.target.value)}
               placeholder="E.g. Frontend Developer"
-              className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-foreground">Short Bio / Headline</Label>
-            <Input
-              value={shortBio}
-              onChange={(e) => setShortBio(e.target.value)}
-              placeholder="E.g. Building scalable web experiences"
               className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
             />
           </div>
@@ -337,12 +343,14 @@ export default function ProfileTab({ onProfileUpdate }) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-foreground">Date of Birth</Label>
+            <Label className="text-foreground text-sm font-semibold">
+              Date of Birth
+            </Label>
             <Input
               type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+              className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary w-full"
             />
           </div>
 
@@ -388,7 +396,7 @@ export default function ProfileTab({ onProfileUpdate }) {
       </div>
 
       {/* Address Information */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
         <h2 className="text-xl font-bold text-foreground">
           Address Information
         </h2>
@@ -570,14 +578,12 @@ export default function ProfileTab({ onProfileUpdate }) {
       </div>
 
       {/* About & Experience */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
         <h2 className="text-xl font-bold text-foreground">
           Experience & Education
         </h2>
         <div className="space-y-2">
-          <Label className="text-foreground">
-            Career Journey & Mentoring Philosophy
-          </Label>
+          <Label className="text-foreground">About Me</Label>
           <Textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
@@ -811,10 +817,106 @@ export default function ProfileTab({ onProfileUpdate }) {
             </p>
           )}
         </div>
+
+        {/* Courses Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4 mt-8">
+            <h3 className="font-semibold text-foreground text-lg">
+              Courses & Certifications
+            </h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCourses([
+                  ...courses,
+                  {
+                    id: Date.now().toString(),
+                    title: "",
+                    provider: "",
+                    year: "",
+                  },
+                ])
+              }
+              className="gap-2"
+            >
+              <Plus className="w-4 h-4" /> Add Course
+            </Button>
+          </div>
+          {courses.map((course, index) => (
+            <div
+              key={course.id}
+              className="p-4 border border-border rounded-xl bg-muted/30 relative space-y-4 group grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"
+            >
+              <button
+                type="button"
+                onClick={() =>
+                  setCourses(courses.filter((_, i) => i !== index))
+                }
+                className="absolute top-4 right-4 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="space-y-1.5 md:col-span-1">
+                <Label className="text-muted-foreground text-xs font-semibold">
+                  Course Title
+                </Label>
+                <Input
+                  placeholder="E.g. Advanced React Patterns"
+                  value={course.title}
+                  onChange={(e) => {
+                    const newCourses = [...courses];
+                    newCourses[index].title = e.target.value;
+                    setCourses(newCourses);
+                  }}
+                  className="bg-background border-border"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-1">
+                <Label className="text-muted-foreground text-xs font-semibold">
+                  Provider / Platform
+                </Label>
+                <Input
+                  placeholder="E.g. Coursera"
+                  value={course.provider}
+                  onChange={(e) => {
+                    const newCourses = [...courses];
+                    newCourses[index].provider = e.target.value;
+                    setCourses(newCourses);
+                  }}
+                  className="bg-background border-border"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-1">
+                <Label className="text-muted-foreground text-xs font-semibold">
+                  Completion Year
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="E.g. 2023"
+                  max={new Date().getFullYear()}
+                  value={course.year}
+                  onChange={(e) => {
+                    const newCourses = [...courses];
+                    newCourses[index].year = e.target.value;
+                    setCourses(newCourses);
+                  }}
+                  className="bg-background border-border"
+                />
+              </div>
+            </div>
+          ))}
+          {courses.length === 0 && (
+            <p className="text-sm text-muted-foreground italic">
+              No courses added yet.
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Skill Sets */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
         <h2 className="text-xl font-bold text-foreground">Core Skills</h2>
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -839,7 +941,12 @@ export default function ProfileTab({ onProfileUpdate }) {
               placeholder="Add a skill (e.g. Node.js)"
               value={newSkill}
               onChange={(e) => setNewSkill(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddSkill(e)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddSkill(e);
+                }
+              }}
               className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <Button
@@ -852,10 +959,55 @@ export default function ProfileTab({ onProfileUpdate }) {
             </Button>
           </div>
         </div>
+
+        <div className="border-t border-border mt-8 pt-8 space-y-4">
+          <h3 className="font-semibold text-foreground text-lg">
+            Skills For (Categories/Roles)
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {skillsFor.map((skillFor) => (
+              <Badge
+                key={skillFor}
+                className="bg-secondary/20 text-secondary-foreground border border-secondary/30 hover:bg-secondary/30 px-3 py-1.5 text-sm gap-2"
+              >
+                {skillFor}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveSkillFor(skillFor)}
+                  className="hover:text-foreground transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </Badge>
+            ))}
+          </div>
+          <div className="flex gap-2 max-w-md">
+            <Input
+              placeholder="E.g. Frontend Developer"
+              value={newSkillFor}
+              onChange={(e) => setNewSkillFor(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddSkillFor(e);
+                }
+              }}
+              className="bg-background border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary"
+            />
+            <Button
+              type="button"
+              onClick={handleAddSkillFor}
+              variant="outline"
+              className="border-border text-foreground hover:bg-muted"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Social Links */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
         <h2 className="text-xl font-bold text-foreground">Social Profiles</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -906,7 +1058,7 @@ export default function ProfileTab({ onProfileUpdate }) {
       </div>
 
       {/* KYC / Verification */}
-      <div className="bg-card border border-border rounded-lg p-6 md:p-8 space-y-6 shadow-xl relative overflow-hidden">
+      <div className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6 relative overflow-hidden">
         {/* Subtle accent glow */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
@@ -953,7 +1105,7 @@ export default function ProfileTab({ onProfileUpdate }) {
               <img
                 src={frontId.previewUrl}
                 alt="Front ID Preview"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-xl"
               />
             ) : (
               <>
@@ -991,7 +1143,7 @@ export default function ProfileTab({ onProfileUpdate }) {
               <img
                 src={backId.previewUrl}
                 alt="Back ID Preview"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover rounded-xl"
               />
             ) : (
               <>
@@ -1014,7 +1166,7 @@ export default function ProfileTab({ onProfileUpdate }) {
       </div>
 
       {/* Action Bar */}
-      <div className="sticky bottom-6 bg-card/90 backdrop-blur-xl border border-border p-4 rounded-lg flex items-center justify-end gap-4 shadow-2xl z-50">
+      <div className="sticky bottom-6 bg-card/90 backdrop-blur-xl border border-border p-4 rounded-xl flex items-center justify-end gap-4 shadow-2xl z-50">
         <Button
           type="button"
           variant="ghost"
