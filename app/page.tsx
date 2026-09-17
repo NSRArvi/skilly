@@ -1,13 +1,6 @@
-import Hero from "../components/pages/home/Hero";
-import FeaturedProfessionals from "../components/pages/home/FeaturedProfessionals";
-import HowItWorks from "../components/pages/home/HowItWorks";
+import { redirect } from "next/navigation";
 
-export default function page() {
-  return (
-    <div>
-      <Hero />
-      <FeaturedProfessionals />
-      <HowItWorks />
-    </div>
-  );
+export default function HomePage() {
+  redirect("/professionals");
 }
+

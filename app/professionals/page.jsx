@@ -30,16 +30,6 @@ export default function ProfessionalsPage() {
   return (
     <div className="min-h-screen bg-background py-16">
       <Container>
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Discover Professionals
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl">
-            Browse through our directory of verified experts ready to help you
-            with your next big project.
-          </p>
-        </div>
-
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (

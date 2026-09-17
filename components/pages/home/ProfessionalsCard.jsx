@@ -12,16 +12,25 @@ import {
 export default function ProfessionalsCard({ professional }) {
   const address = professional.present_address || {};
   const location = [address.city, address.country].filter(Boolean).join(", ");
+  const isVerified = Boolean(professional.is_verified ?? professional.is_verify);
 
   return (
     <Link
       href={`/professionals/${professional.id}`}
-      className="bg-card border border-border rounded-2xl p-5 flex flex-col justify-between h-full hover:border-primary/50 hover:shadow-md transition-all group block cursor-pointer"
+      className={`bg-card border rounded-2xl p-5 flex flex-col justify-between h-full hover:shadow-md transition-all group block cursor-pointer ${
+        isVerified
+          ? "border-primary/35 hover:border-primary"
+          : "border-border hover:border-primary/50"
+      }`}
     >
       <div>
         <div className="flex gap-4 mb-3">
           <div className="relative h-14 w-14 rounded-full flex-shrink-0">
-            <div className="h-14 w-14 rounded-full bg-muted overflow-hidden relative">
+            <div
+              className={`h-14 w-14 rounded-full bg-muted overflow-hidden relative ${
+                isVerified ? "ring-2 ring-primary/40" : ""
+              }`}
+            >
               <Image
                 src={
                   professional.avatar_url ||
@@ -33,8 +42,8 @@ export default function ProfessionalsCard({ professional }) {
               />
             </div>
             {/* Verified Badge */}
-            {professional.is_verified && (
-              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-[2px]">
+            {isVerified && (
+              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-[2px] shadow-sm">
                 <CheckCircle className="w-4 h-4 text-primary fill-primary/20" />
               </div>
             )}
