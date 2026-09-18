@@ -85,9 +85,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           id: "Messages",
           label: "Messages",
           icon: MessageSquare,
-          badge: "3",
-          href: "#",
-          action: () => toast.info("3 unread messages in your inbox"),
+          href: "/messages",
         },
         {
           id: "Community",
@@ -96,50 +94,43 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           href: "#",
           action: () => toast.info("Community & Guilds coming soon!"),
         },
-        {
-          id: "Mentorship",
-          label: "Mentorship",
-          icon: GraduationCap,
-          href: "#",
-          action: () => toast.info("Mentorship programs coming soon!"),
-        },
       ],
     },
-    {
-      title: "MANAGEMENT",
-      items: [
-        {
-          id: "Verification Center",
-          label: "Verification Center",
-          icon: ShieldCheck,
-          href: "#",
-          action: () => toast.info("Verification Center: KYC Status verified"),
-        },
-        {
-          id: "Wallet & Payouts",
-          label: "Wallet & Payouts",
-          icon: Wallet,
-          href: "#",
-          action: () => toast.info("Wallet & Payouts connected via Stripe"),
-        },
-        {
-          id: "Analytics",
-          label: "Analytics",
-          icon: BarChart3,
-          href: "#",
-          action: () => toast.info("Analytics dashboard coming soon!"),
-        },
-      ],
-    },
+    // {
+    //   title: "MANAGEMENT",
+    //   items: [
+    //     {
+    //       id: "Verification Center",
+    //       label: "Verification Center",
+    //       icon: ShieldCheck,
+    //       href: "#",
+    //       action: () => toast.info("Verification Center: KYC Status verified"),
+    //     },
+    //     {
+    //       id: "Wallet & Payouts",
+    //       label: "Wallet & Payouts",
+    //       icon: Wallet,
+    //       href: "#",
+    //       action: () => toast.info("Wallet & Payouts connected via Stripe"),
+    //     },
+    //     {
+    //       id: "Analytics",
+    //       label: "Analytics",
+    //       icon: BarChart3,
+    //       href: "#",
+    //       action: () => toast.info("Analytics dashboard coming soon!"),
+    //     },
+    //   ],
+    // },
   ];
 
   const bottomItems = [
-    {
-      id: "Settings",
-      label: "Settings",
-      icon: Settings,
-      action: () => toast.info("Settings modal"),
-    },
+    // {
+    //   id: "Settings",
+    //   label: "Settings",
+    //   icon: Settings,
+    //   action: () => toast.info("Settings modal"),
+    // },
     {
       id: "Help & Support",
       label: "Help & Support",

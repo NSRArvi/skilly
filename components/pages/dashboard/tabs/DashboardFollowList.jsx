@@ -27,17 +27,19 @@ export default function DashboardFollowList({ userId, type }) {
     }
 
     const { data: followRecords, error } = await query;
-    
+
     if (followRecords && followRecords.length > 0) {
       // Extract the user IDs we need to fetch profiles for
-      const targetUserIds = followRecords.map(r => type === "followers" ? r.follower_id : r.following_id);
-      
+      const targetUserIds = followRecords.map((r) =>
+        type === "followers" ? r.follower_id : r.following_id,
+      );
+
       // Stage 2: Fetch profiles from professionals table
       const { data: profiles } = await supabase
         .from("professionals")
         .select("id, user_id, full_name, avatar_url, profession")
         .in("user_id", targetUserIds);
-        
+
       if (profiles) {
         let myFollowingIds = new Set();
         if (type === "followers") {
@@ -47,21 +49,25 @@ export default function DashboardFollowList({ userId, type }) {
             .eq("follower_id", userId)
             .in("following_id", targetUserIds);
           if (myFollowing) {
-            myFollowingIds = new Set(myFollowing.map(f => f.following_id));
+            myFollowingIds = new Set(myFollowing.map((f) => f.following_id));
           }
         }
 
         // Map the profiles back to the follow records
-        const combined = followRecords.map(record => {
-          const targetId = type === "followers" ? record.follower_id : record.following_id;
-          const profile = profiles.find(p => p.user_id === targetId);
-          return {
-            ...record,
-            profile,
-            isFollowingBack: type === "followers" ? myFollowingIds.has(targetId) : true,
-          };
-        }).filter(item => item.profile); // Only keep ones where profile exists
-        
+        const combined = followRecords
+          .map((record) => {
+            const targetId =
+              type === "followers" ? record.follower_id : record.following_id;
+            const profile = profiles.find((p) => p.user_id === targetId);
+            return {
+              ...record,
+              profile,
+              isFollowingBack:
+                type === "followers" ? myFollowingIds.has(targetId) : true,
+            };
+          })
+          .filter((item) => item.profile); // Only keep ones where profile exists
+
         setList(combined);
       }
     } else {
@@ -76,13 +82,16 @@ export default function DashboardFollowList({ userId, type }) {
 
   const handleUnfollow = async (followRecordId, name) => {
     const supabase = createClient();
-    const { error } = await supabase.from("followers").delete().eq("id", followRecordId);
-    
+    const { error } = await supabase
+      .from("followers")
+      .delete()
+      .eq("id", followRecordId);
+
     if (error) {
       toast.error("Failed to unfollow");
     } else {
       toast.success(`Unfollowed ${name}`);
-      setList(list.filter(item => item.id !== followRecordId));
+      setList(list.filter((item) => item.id !== followRecordId));
     }
   };
 
@@ -102,7 +111,7 @@ export default function DashboardFollowList({ userId, type }) {
           {type === "followers" ? "No Followers Yet" : "Not Following Anyone"}
         </h3>
         <p className="text-xs max-w-md mx-auto">
-          {type === "followers" 
+          {type === "followers"
             ? "When other users follow you, they will appear here."
             : "Find professionals and click Follow to stay updated with their work."}
         </p>
@@ -111,14 +120,22 @@ export default function DashboardFollowList({ userId, type }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {list.map((item) => {
-        const profile = Array.isArray(item.profile) ? item.profile[0] : item.profile;
+        const profile = Array.isArray(item.profile)
+          ? item.profile[0]
+          : item.profile;
         if (!profile) return null;
 
         return (
-          <div key={item.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors">
-            <Link href={`/professionals/${profile.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
+          <div
+            key={item.id}
+            className="bg-card border border-border rounded-xl p-4 flex items-center justify-between gap-3 hover:border-primary/40 transition-colors"
+          >
+            <Link
+              href={`/professionals/${profile.id}`}
+              className="flex items-center gap-3 flex-1 min-w-0 group"
+            >
               <Avatar className="w-10 h-10 border border-border group-hover:border-primary transition-colors">
                 <AvatarImage src={profile.avatar_url} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
@@ -134,7 +151,7 @@ export default function DashboardFollowList({ userId, type }) {
                 </p>
               </div>
             </Link>
-            
+
             {type === "following" ? (
               <Button
                 variant="outline"
@@ -144,41 +161,41 @@ export default function DashboardFollowList({ userId, type }) {
               >
                 Unfollow
               </Button>
+            ) : item.isFollowingBack ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase
+                    .from("followers")
+                    .delete()
+                    .eq("follower_id", userId)
+                    .eq("following_id", profile.user_id);
+                  toast.success(`Unfollowed ${profile.full_name}`);
+                  fetchList(); // Refresh list to update state
+                }}
+                className="h-8 rounded-lg text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-border"
+              >
+                Following
+              </Button>
             ) : (
-              item.isFollowingBack ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.from("followers").delete()
-                      .eq("follower_id", userId)
-                      .eq("following_id", profile.user_id);
-                    toast.success(`Unfollowed ${profile.full_name}`);
-                    fetchList(); // Refresh list to update state
-                  }}
-                  className="h-8 rounded-lg text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-border"
-                >
-                  Following
-                </Button>
-              ) : (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.from("followers").insert({
-                      follower_id: userId,
-                      following_id: profile.user_id
-                    });
-                    toast.success(`Followed ${profile.full_name}`);
-                    fetchList(); // Refresh list to update state
-                  }}
-                  className="h-8 rounded-lg text-xs font-bold shadow-sm"
-                >
-                  Follow Back
-                </Button>
-              )
+              <Button
+                variant="default"
+                size="sm"
+                onClick={async () => {
+                  const supabase = createClient();
+                  await supabase.from("followers").insert({
+                    follower_id: userId,
+                    following_id: profile.user_id,
+                  });
+                  toast.success(`Followed ${profile.full_name}`);
+                  fetchList(); // Refresh list to update state
+                }}
+                className="h-8 rounded-lg text-xs font-bold shadow-sm"
+              >
+                Follow Back
+              </Button>
             )}
           </div>
         );

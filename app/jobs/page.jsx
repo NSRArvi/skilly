@@ -73,6 +73,8 @@ export default function JobsPage() {
       }
       if (selectedStatus !== "all") {
         query = query.eq("status", selectedStatus);
+      } else {
+        query = query.neq("status", "over");
       }
       if (selectedType !== "all") {
         query = query.eq("job_type", selectedType);

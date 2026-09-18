@@ -427,13 +427,13 @@ export default function Dashboard() {
                 <Briefcase className="w-4 h-4" />
                 Jobs
               </TabsTrigger>
-              <TabsTrigger
+              {/* <TabsTrigger
                 value="services"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Services
-              </TabsTrigger>
+              </TabsTrigger> */}
               <TabsTrigger
                 value="following"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
@@ -482,7 +482,7 @@ export default function Dashboard() {
             <TabsContent value="jobs" className="m-0 border-none outline-none">
               <DashboardJobsTab userId={userProfile.id} />
             </TabsContent>
-            <TabsContent
+            {/* <TabsContent
               value="services"
               className="m-0 border-none outline-none"
             >
@@ -502,7 +502,7 @@ export default function Dashboard() {
                   + Create New Service
                 </Button>
               </div>
-            </TabsContent>
+            </TabsContent> */}
             <TabsContent
               value="following"
               className="m-0 border-none outline-none"

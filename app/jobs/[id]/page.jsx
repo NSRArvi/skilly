@@ -23,6 +23,15 @@ import {
 import { createClient } from "../../../lib/client";
 import { toast } from "sonner";
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
@@ -31,12 +40,19 @@ export default function JobDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
 
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+  const [coverLetter, setCoverLetter] = useState("");
+  const [isApplying, setIsApplying] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
+
   useEffect(() => {
     const fetchJob = async () => {
       if (!id) return;
       const supabase = createClient();
-      
-      const { data: { user } } = await supabase.auth.getUser();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) setCurrentUserId(user.id);
 
       const { data, error } = await supabase
@@ -54,14 +70,53 @@ export default function JobDetailsPage() {
           .select("full_name, avatar_url, is_verified, profession")
           .eq("user_id", data.user_id)
           .single();
-        
+
         if (profData) setPoster(profData);
+
+        if (user) {
+          const { data: applyData } = await supabase
+            .from("job_applications")
+            .select("id")
+            .eq("job_id", id)
+            .eq("applicant_id", user.id)
+            .maybeSingle();
+
+          if (applyData) setHasApplied(true);
+        }
       }
       setLoading(false);
     };
 
     fetchJob();
   }, [id]);
+
+  const handleApply = async () => {
+    if (!currentUserId) {
+      toast.error("Please login to apply.");
+      return;
+    }
+
+    setIsApplying(true);
+    const supabase = createClient();
+
+    const { error } = await supabase.from("job_applications").insert({
+      job_id: id,
+      applicant_id: currentUserId,
+      cover_letter: coverLetter.trim() || null,
+      status: "pending",
+    });
+
+    setIsApplying(false);
+
+    if (error) {
+      toast.error("Failed to submit application. Please try again.");
+    } else {
+      toast.success("Application submitted successfully!");
+      setHasApplied(true);
+      setApplyModalOpen(false);
+      setCoverLetter("");
+    }
+  };
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -78,14 +133,29 @@ export default function JobDetailsPage() {
   };
 
   const statusConfig = {
-    opening_soon: { label: "Opening Soon", className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
-    running: { label: "Running", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
-    over: { label: "Over", className: "bg-red-500/15 text-red-600 border-red-500/30" },
+    opening_soon: {
+      label: "Opening Soon",
+      className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    },
+    running: {
+      label: "Running",
+      className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    },
+    over: {
+      label: "Over",
+      className: "bg-red-500/15 text-red-600 border-red-500/30",
+    },
   };
 
   const priorityConfig = {
-    urgent: { label: "Urgent", className: "bg-red-500/15 text-red-600 border-red-500/30" },
-    regular: { label: "Regular", className: "bg-muted text-muted-foreground border-border/50" },
+    urgent: {
+      label: "Urgent",
+      className: "bg-red-500/15 text-red-600 border-red-500/30",
+    },
+    regular: {
+      label: "Regular",
+      className: "bg-muted text-muted-foreground border-border/50",
+    },
   };
 
   if (loading) {
@@ -111,10 +181,16 @@ export default function JobDetailsPage() {
         <Container>
           <div className="text-center py-24 bg-card border border-border rounded-3xl">
             <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">Job not found</h3>
-            <p className="text-muted-foreground text-sm mb-6">This job may have been removed or doesn&apos;t exist.</p>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              Job not found
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              This job may have been removed or doesn&apos;t exist.
+            </p>
             <Link href="/jobs">
-              <Button className="rounded-xl font-semibold">Browse All Jobs</Button>
+              <Button className="rounded-xl font-semibold">
+                Browse All Jobs
+              </Button>
             </Link>
           </div>
         </Container>
@@ -123,16 +199,23 @@ export default function JobDetailsPage() {
   }
 
   const sym = currencySymbol[job.salary_currency] || job.salary_currency;
-  const salaryStr = job.salary_min && job.salary_max
-    ? `${sym}${job.salary_min.toLocaleString()} - ${sym}${job.salary_max.toLocaleString()}`
-    : job.salary_min
-    ? `From ${sym}${job.salary_min.toLocaleString()}`
-    : job.salary_max
-    ? `Up to ${sym}${job.salary_max.toLocaleString()}`
-    : "Negotiable";
+  const salaryStr =
+    job.salary_min && job.salary_max
+      ? `${sym}${job.salary_min.toLocaleString()} - ${sym}${job.salary_max.toLocaleString()}`
+      : job.salary_min
+        ? `From ${sym}${job.salary_min.toLocaleString()}`
+        : job.salary_max
+          ? `Up to ${sym}${job.salary_max.toLocaleString()}`
+          : "Negotiable";
 
-  const locationParts = [job.full_address, job.city, job.state, job.country].filter(Boolean);
-  const locationStr = locationParts.length > 0 ? locationParts.join(", ") : null;
+  const locationParts = [
+    job.full_address,
+    job.city,
+    job.state,
+    job.country,
+  ].filter(Boolean);
+  const locationStr =
+    locationParts.length > 0 ? locationParts.join(", ") : null;
 
   const postedDate = new Date(job.created_at).toLocaleDateString("en-US", {
     month: "long",
@@ -141,7 +224,11 @@ export default function JobDetailsPage() {
   });
 
   const deadlineStr = job.application_deadline
-    ? new Date(job.application_deadline).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    ? new Date(job.application_deadline).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
     : null;
 
   const st = statusConfig[job.status] || statusConfig.running;
@@ -175,11 +262,15 @@ export default function JobDetailsPage() {
             <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm space-y-5">
               {/* Badges */}
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${st.className}`}>
+                <Badge
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${st.className}`}
+                >
                   {st.label}
                 </Badge>
                 {job.priority === "urgent" && (
-                  <Badge className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${pr.className}`}>
+                  <Badge
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border ${pr.className}`}
+                  >
                     🔥 Urgent
                   </Badge>
                 )}
@@ -229,11 +320,17 @@ export default function JobDetailsPage() {
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-muted-foreground">Category:</span>
                   {job.categories?.name && (
-                    <span className="font-semibold text-primary">{job.categories.name}</span>
+                    <span className="font-semibold text-primary">
+                      {job.categories.name}
+                    </span>
                   )}
-                  {job.categories?.name && job.subcategories?.name && <span className="text-muted-foreground">•</span>}
+                  {job.categories?.name && job.subcategories?.name && (
+                    <span className="text-muted-foreground">•</span>
+                  )}
                   {job.subcategories?.name && (
-                    <span className="font-medium text-foreground">{job.subcategories.name}</span>
+                    <span className="font-medium text-foreground">
+                      {job.subcategories.name}
+                    </span>
                   )}
                 </div>
               )}
@@ -242,7 +339,9 @@ export default function JobDetailsPage() {
             {/* Description */}
             {job.description && (
               <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm space-y-3">
-                <h2 className="text-base font-bold text-foreground">Job Description</h2>
+                <h2 className="text-base font-bold text-foreground">
+                  Job Description
+                </h2>
                 <div className="text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
                   {job.description}
                 </div>
@@ -252,7 +351,9 @@ export default function JobDetailsPage() {
             {/* Skills */}
             {job.skills?.length > 0 && (
               <div className="bg-card border border-border rounded-2xl p-6 md:p-8 shadow-sm space-y-3">
-                <h2 className="text-base font-bold text-foreground">Required Skills</h2>
+                <h2 className="text-base font-bold text-foreground">
+                  Required Skills
+                </h2>
                 <div className="flex flex-wrap gap-2">
                   {job.skills.map((skill) => (
                     <span
@@ -276,7 +377,9 @@ export default function JobDetailsPage() {
                 Compensation
               </h3>
               <div>
-                <p className="text-2xl font-extrabold text-foreground">{salaryStr}</p>
+                <p className="text-2xl font-extrabold text-foreground">
+                  {salaryStr}
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5 capitalize">
                   {job.salary_currency} / {job.salary_period}
                 </p>
@@ -294,19 +397,25 @@ export default function JobDetailsPage() {
                   {job.office_days && (
                     <div className="flex justify-between">
                       <span>Office Days</span>
-                      <span className="text-foreground font-medium">{job.office_days}</span>
+                      <span className="text-foreground font-medium">
+                        {job.office_days}
+                      </span>
                     </div>
                   )}
                   {job.work_hours_per_week && (
                     <div className="flex justify-between">
                       <span>Hours / Week</span>
-                      <span className="text-foreground font-medium">{job.work_hours_per_week}h</span>
+                      <span className="text-foreground font-medium">
+                        {job.work_hours_per_week}h
+                      </span>
                     </div>
                   )}
                   {job.start_time && job.close_time && (
                     <div className="flex justify-between">
                       <span>Working Hours</span>
-                      <span className="text-foreground font-medium">{job.start_time} - {job.close_time}</span>
+                      <span className="text-foreground font-medium">
+                        {job.start_time} - {job.close_time}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -323,7 +432,11 @@ export default function JobDetailsPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
                     {poster.avatar_url ? (
-                      <img src={poster.avatar_url} alt={poster.full_name} className="w-full h-full object-cover" />
+                      <img
+                        src={poster.avatar_url}
+                        alt={poster.full_name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-sm font-bold text-muted-foreground">
                         {poster.full_name?.charAt(0) || "?"}
@@ -333,9 +446,13 @@ export default function JobDetailsPage() {
                   <div>
                     <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
                       {poster.full_name}
-                      {poster.is_verified && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
+                      {poster.is_verified && (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+                      )}
                     </p>
-                    <p className="text-xs text-muted-foreground">{poster.profession || "Professional"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {poster.profession || "Professional"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -345,16 +462,29 @@ export default function JobDetailsPage() {
             <div className="space-y-3">
               {currentUserId === job.user_id ? (
                 <Link href={`/jobs/${job.id}/edit`}>
-                  <Button
-                    className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm shadow-md shadow-primary/20 mb-3"
-                  >
+                  <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm shadow-md shadow-primary/20 mb-3">
                     Edit Job
                   </Button>
                 </Link>
+              ) : job.status === "over" ? (
+                <Button
+                  disabled
+                  className="w-full h-12 rounded-xl bg-muted text-muted-foreground font-bold text-sm shadow-sm mb-3 cursor-not-allowed"
+                >
+                  Applications Closed
+                </Button>
+              ) : hasApplied ? (
+                <Button
+                  disabled
+                  className="w-full h-12 rounded-xl bg-muted text-muted-foreground font-bold text-sm shadow-sm mb-3 cursor-not-allowed"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Applied
+                </Button>
               ) : (
                 <Button
-                  onClick={() => toast.success("Application submitted! The employer will contact you.")}
-                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm shadow-md shadow-primary/20"
+                  onClick={() => setApplyModalOpen(true)}
+                  className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm shadow-md shadow-primary/20 mb-3"
                 >
                   Apply Now
                 </Button>
@@ -371,6 +501,39 @@ export default function JobDetailsPage() {
           </div>
         </div>
       </Container>
+
+      {/* Apply Modal */}
+      <Dialog open={applyModalOpen} onOpenChange={setApplyModalOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Apply for {job.title}</DialogTitle>
+            <DialogDescription>
+              Write a short cover letter or proposal explaining why you are a
+              good fit for this job.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Textarea
+              placeholder="Your cover letter or proposal..."
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              className="min-h-[150px] resize-none"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setApplyModalOpen(false)}
+              disabled={isApplying}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleApply} disabled={isApplying}>
+              {isApplying ? "Submitting..." : "Submit Application"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
