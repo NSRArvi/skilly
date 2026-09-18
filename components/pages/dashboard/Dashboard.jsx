@@ -338,7 +338,7 @@ export default function Dashboard() {
               {/* Name, Verified Badge, Headline & Meta Details */}
               <div className="space-y-1 pb-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+                  <h1 className="text-xl md:text-2xl font-bold text-white tracking-tight">
                     {userProfile.name}
                   </h1>
                   {userProfile.status ? (

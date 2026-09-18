@@ -34,7 +34,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AppShell>{children}</AppShell>
-          <Toaster richColors position="top-center" />
+          <Toaster richColors position="top-center" closeButton />
         </ThemeProvider>
       </body>
     </html>

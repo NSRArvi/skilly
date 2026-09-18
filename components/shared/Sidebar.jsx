@@ -221,7 +221,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           {/* Brand Header */}
           <div className="flex items-center justify-between px-3 pt-2 pb-1">
             <Link href="/professionals" className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-black/50 border border-border">
+              {/* <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center bg-black/50 border border-border">
                 <Image
                   src="/skilly.png"
                   alt="Skilly Logo"
@@ -229,13 +229,13 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
                   height={28}
                   className="object-contain"
                 />
-              </div>
-              <span className="font-bold text-lg text-foreground tracking-tight">
+              </div> */}
+              <span className="font-bold text-xl text-foreground tracking-tight">
                 Skilly
               </span>
-              <span className="border border-primary/50 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-primary/10 ml-0.5">
+              {/* <span className="border border-primary/50 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wider bg-primary/10 ml-0.5">
                 PRO
-              </span>
+              </span> */}
             </Link>
 
             {/* Mobile close button */}

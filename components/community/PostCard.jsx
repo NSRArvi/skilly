@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 import { createClient } from "../../lib/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import ConfirmDialog from "../shared/ConfirmDialog";
 
 export default function PostCard({ 
   post, 
@@ -31,6 +32,8 @@ export default function PostCard({
   const [likeCount, setLikeCount] = useState(post.reactions?.[0]?.count || 0);
   const [commentCount, setCommentCount] = useState(post.comments?.[0]?.count || 0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const isOwner = currentUser?.id === post.user_id;
   const postAuthor = post.author || {};
@@ -141,23 +144,22 @@ export default function PostCard({
     }
   };
 
-  const handleDelete = async (e) => {
-    if (e) e.preventDefault();
-    if (e) e.stopPropagation();
-    
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      const { error } = await supabase
-        .from('community_posts')
-        .delete()
-        .eq('id', post.id);
-        
-      if (error) {
-        toast.error("Failed to delete post");
-      } else {
-        toast.success("Post deleted successfully");
-        if (onDelete) onDelete(post.id);
-        if (isDetailView) router.push('/community');
-      }
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', post.id);
+      
+    if (error) {
+      toast.error("Failed to delete post");
+      setIsDeleting(false);
+    } else {
+      toast.success("Post deleted successfully");
+      setShowDeleteConfirm(false);
+      setIsDeleting(false);
+      if (onDelete) onDelete(post.id);
+      if (isDetailView) router.push('/community');
     }
   };
 
@@ -277,8 +279,10 @@ export default function PostCard({
                   </button>
                   <button 
                     onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setIsMenuOpen(false);
-                      handleDelete(e);
+                      setShowDeleteConfirm(true);
                     }}
                     className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
                   >
@@ -327,6 +331,16 @@ export default function PostCard({
           Share
         </button>
       </div>
+
+      <ConfirmDialog 
+        isOpen={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDelete}
+        title="Delete Post"
+        description="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

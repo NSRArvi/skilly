@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "../ui/button";
@@ -16,6 +16,7 @@ import {
   LogOut,
   MessageCircle,
   Users2,
+  Loader2,
 } from "lucide-react";
 import { createClient } from "../../lib/client";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,10 @@ export default function Navbar({ onToggleMobileSidebar }) {
   const [user, setUser] = useState(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState({ professionals: [], jobs: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchContainerRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +46,57 @@ export default function Navbar({ onToggleMobileSidebar }) {
     };
     fetchUser();
   }, []);
+
+  // Close search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Debounced Search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        performSearch(searchQuery.trim());
+      } else {
+        setSearchResults({ professionals: [], jobs: [] });
+        setShowSearchDropdown(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const performSearch = async (query) => {
+    setIsSearching(true);
+    setShowSearchDropdown(true);
+    const supabase = createClient();
+    
+    // Search professionals
+    const { data: profs } = await supabase
+      .from('professionals')
+      .select('user_id, full_name, profession, avatar_url')
+      .ilike('full_name', `%${query}%`)
+      .limit(3);
+      
+    // Search jobs
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('id, title, location')
+      .ilike('title', `%${query}%`)
+      .limit(3);
+      
+    setSearchResults({ 
+      professionals: profs || [], 
+      jobs: jobs || [] 
+    });
+    setIsSearching(false);
+  };
 
   const toggleTheme = () => {
     const currentTheme = theme === "system" ? resolvedTheme : theme;
@@ -65,6 +121,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
 
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter" && searchQuery.trim()) {
+      setShowSearchDropdown(false);
       router.push(
         `/professionals?query=${encodeURIComponent(searchQuery.trim())}`,
       );
@@ -88,21 +145,116 @@ export default function Navbar({ onToggleMobileSidebar }) {
         </button>
 
         {/* Search Bar matching screenshot */}
-        <div className="relative w-full max-w-md hidden md:block">
+        <div className="relative w-full max-w-md hidden md:block" ref={searchContainerRef}>
           <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (e.target.value.length >= 2) setShowSearchDropdown(true);
+            }}
+            onFocus={() => {
+              if (searchQuery.trim().length >= 2) setShowSearchDropdown(true);
+            }}
             onKeyDown={handleSearchKeyDown}
-            placeholder="Search professionals, jobs, skills..."
+            placeholder="Search professionals, jobs..."
             className="w-full bg-background/60 border border-border/80 text-foreground placeholder:text-muted-foreground text-xs rounded-xl pl-9 pr-12 py-2 h-9 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:flex items-center">
-            <span className="text-[10px] font-mono text-muted-foreground/80 bg-muted/60 border border-border/60 px-1.5 py-0.5 rounded">
-              ⌘K
-            </span>
+            {isSearching ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+            ) : (
+              <span className="text-[10px] font-mono text-muted-foreground/80 bg-muted/60 border border-border/60 px-1.5 py-0.5 rounded">
+                ⌘K
+              </span>
+            )}
           </div>
+
+          {/* Search Results Dropdown */}
+          {showSearchDropdown && (searchQuery.trim().length >= 2) && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 max-h-[80vh] overflow-y-auto">
+              {!isSearching && searchResults.professionals.length === 0 && searchResults.jobs.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  No results found for "{searchQuery}"
+                </div>
+              ) : (
+                <div className="py-2">
+                  {/* Professionals Section */}
+                  {searchResults.professionals.length > 0 && (
+                    <div className="mb-2">
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">
+                        Professionals
+                      </div>
+                      {searchResults.professionals.map(prof => (
+                        <div 
+                          key={prof.user_id}
+                          onClick={() => {
+                            setShowSearchDropdown(false);
+                            router.push(`/professionals/${prof.user_id}`);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-muted cursor-pointer transition-colors"
+                        >
+                          <Avatar className="w-8 h-8 rounded-full border border-border">
+                            <AvatarImage src={prof.avatar_url} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {prof.full_name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{prof.full_name}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{prof.profession || "Professional"}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Jobs Section */}
+                  {searchResults.jobs.length > 0 && (
+                    <div>
+                      <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">
+                        Jobs
+                      </div>
+                      {searchResults.jobs.map(job => (
+                        <div 
+                          key={job.id}
+                          onClick={() => {
+                            setShowSearchDropdown(false);
+                            router.push(`/jobs/${job.id}`);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-muted cursor-pointer transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <Search className="w-4 h-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">{job.location || "Remote"}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* View All */}
+                  <div 
+                    className="border-t border-border mt-1 pt-1 px-2"
+                  >
+                    <button 
+                      onClick={() => {
+                        setShowSearchDropdown(false);
+                        router.push(`/professionals?query=${encodeURIComponent(searchQuery.trim())}`);
+                      }}
+                      className="w-full text-center text-xs font-medium text-primary py-2 hover:bg-primary/5 rounded-lg transition-colors"
+                    >
+                      View all results
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
