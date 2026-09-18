@@ -45,6 +45,7 @@ import {
 } from "react-icons/fa";
 import { createClient } from "../../../../lib/client";
 import { toast } from "sonner";
+import { Country, State, City } from "country-state-city";
 
 export default function ProfileTab({ onProfileUpdate }) {
   const [loading, setLoading] = useState(false);
@@ -64,17 +65,27 @@ export default function ProfileTab({ onProfileUpdate }) {
   const [bioTagline, setBioTagline] = useState("");
   const [aboutText, setAboutText] = useState("");
 
+  // Categories States
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+
   // 2. Address States
   const [presentAddress, setPresentAddress] = useState({
-    country: "",
+    country: "Bangladesh",
+    countryCode: "BD",
     state: "",
+    stateCode: "",
     city: "",
     zipcode: "",
     fullAddress: "",
   });
   const [permanentAddress, setPermanentAddress] = useState({
-    country: "",
+    country: "Bangladesh",
+    countryCode: "BD",
     state: "",
+    stateCode: "",
     city: "",
     zipcode: "",
     fullAddress: "",
@@ -146,6 +157,8 @@ export default function ProfileTab({ onProfileUpdate }) {
           setFullName(profData.full_name || defaultName);
           setEmail(profData.email || userEmail);
           setProfession(profData.profession || "");
+          setSelectedCategory(profData.category_id || "");
+          setSelectedSubcategory(profData.subcategory_id || "");
           setHourlyRate(
             profData.hourly_rate ? String(profData.hourly_rate) : "",
           );
@@ -162,8 +175,10 @@ export default function ProfileTab({ onProfileUpdate }) {
             typeof profData.present_address === "object"
           ) {
             setPresentAddress({
-              country: profData.present_address.country || "",
+              country: profData.present_address.country || "Bangladesh",
+              countryCode: profData.present_address.countryCode || "BD",
               state: profData.present_address.state || "",
+              stateCode: profData.present_address.stateCode || "",
               city: profData.present_address.city || "",
               zipcode: profData.present_address.zipcode || "",
               fullAddress: profData.present_address.fullAddress || "",
@@ -184,8 +199,10 @@ export default function ProfileTab({ onProfileUpdate }) {
             typeof profData.permanent_address === "object"
           ) {
             setPermanentAddress({
-              country: profData.permanent_address.country || "",
+              country: profData.permanent_address.country || "Bangladesh",
+              countryCode: profData.permanent_address.countryCode || "BD",
               state: profData.permanent_address.state || "",
+              stateCode: profData.permanent_address.stateCode || "",
               city: profData.permanent_address.city || "",
               zipcode: profData.permanent_address.zipcode || "",
               fullAddress: profData.permanent_address.fullAddress || "",
@@ -238,6 +255,29 @@ export default function ProfileTab({ onProfileUpdate }) {
     };
 
     fetchUser();
+  }, []);
+
+  // Fetch Categories & Subcategories
+  useEffect(() => {
+    const fetchTaxonomy = async () => {
+      const supabase = createClient();
+      
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+      
+      if (catData) setCategories(catData);
+
+      const { data: subData } = await supabase
+        .from("subcategories")
+        .select("*")
+        .order("name");
+      
+      if (subData) setSubcategories(subData);
+    };
+    
+    fetchTaxonomy();
   }, []);
 
   // Word counter
@@ -578,6 +618,8 @@ export default function ProfileTab({ onProfileUpdate }) {
       full_name: nameToSave,
       email: emailToSave,
       profession: profession,
+      category_id: selectedCategory || null,
+      subcategory_id: selectedSubcategory || null,
       hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
       daily_rate: dailyRate ? parseFloat(dailyRate) : null,
       date_of_birth: dateOfBirth || null,
@@ -712,6 +754,57 @@ export default function ProfileTab({ onProfileUpdate }) {
                 </div>
               </div>
 
+              {/* Row 2.5: Category & Subcategory */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-foreground">
+                    Category
+                  </Label>
+                  <Select 
+                    value={selectedCategory} 
+                    onValueChange={(val) => { 
+                      setSelectedCategory(val); 
+                      setSelectedSubcategory(""); 
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
+                      <SelectValue placeholder="Select a category">
+                        {categories.find(c => c.id === selectedCategory)?.name || "Select a category"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-foreground">
+                    Subcategory
+                  </Label>
+                  <Select 
+                    value={selectedSubcategory} 
+                    onValueChange={setSelectedSubcategory} 
+                    disabled={!selectedCategory}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
+                      <SelectValue placeholder="Select a subcategory">
+                        {subcategories.find(s => s.id === selectedSubcategory)?.name || "Select a subcategory"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {subcategories
+                        .filter((sub) => sub.category_id === selectedCategory)
+                        .map((sub) => (
+                          <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Row 3: Hourly & Daily Rates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -831,49 +924,94 @@ export default function ProfileTab({ onProfileUpdate }) {
                   <Label className="text-xs font-semibold text-muted-foreground">
                     Country
                   </Label>
-                  <Input
-                    value={presentAddress.country}
-                    onChange={(e) =>
+                  <Select
+                    value={presentAddress.countryCode}
+                    onValueChange={(val) => {
+                      const countryData = Country.getCountryByCode(val);
                       setPresentAddress({
                         ...presentAddress,
-                        country: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Bangladesh"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        countryCode: val,
+                        country: countryData?.name || "",
+                        stateCode: "",
+                        state: "",
+                        city: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select Country">
+                        {presentAddress.country || "Select Country"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {Country.getAllCountries().map((c) => (
+                        <SelectItem key={c.isoCode} value={c.isoCode}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     State / Division
                   </Label>
-                  <Input
-                    value={presentAddress.state}
-                    onChange={(e) =>
+                  <Select
+                    value={presentAddress.stateCode}
+                    disabled={!presentAddress.countryCode}
+                    onValueChange={(val) => {
+                      const stateData = State.getStateByCodeAndCountry(val, presentAddress.countryCode);
                       setPresentAddress({
                         ...presentAddress,
-                        state: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Dhaka"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        stateCode: val,
+                        state: stateData?.name || "",
+                        city: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select State/Division">
+                        {presentAddress.state || "Select State/Division"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {State.getStatesOfCountry(presentAddress.countryCode).map((s) => (
+                        <SelectItem key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     City
                   </Label>
-                  <Input
+                  <Select
                     value={presentAddress.city}
-                    onChange={(e) =>
+                    disabled={!presentAddress.stateCode}
+                    onValueChange={(val) => {
                       setPresentAddress({
                         ...presentAddress,
-                        city: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Dhaka"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        city: val,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select City">
+                        {presentAddress.city || "Select City"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {City.getCitiesOfState(presentAddress.countryCode, presentAddress.stateCode).map((c) => (
+                        <SelectItem key={c.name} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
@@ -920,49 +1058,94 @@ export default function ProfileTab({ onProfileUpdate }) {
                   <Label className="text-xs font-semibold text-muted-foreground">
                     Country
                   </Label>
-                  <Input
-                    value={permanentAddress.country}
-                    onChange={(e) =>
+                  <Select
+                    value={permanentAddress.countryCode}
+                    onValueChange={(val) => {
+                      const countryData = Country.getCountryByCode(val);
                       setPermanentAddress({
                         ...permanentAddress,
-                        country: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Bangladesh"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        countryCode: val,
+                        country: countryData?.name || "",
+                        stateCode: "",
+                        state: "",
+                        city: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select Country">
+                        {permanentAddress.country || "Select Country"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {Country.getAllCountries().map((c) => (
+                        <SelectItem key={c.isoCode} value={c.isoCode}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     State / Division
                   </Label>
-                  <Input
-                    value={permanentAddress.state}
-                    onChange={(e) =>
+                  <Select
+                    value={permanentAddress.stateCode}
+                    disabled={!permanentAddress.countryCode}
+                    onValueChange={(val) => {
+                      const stateData = State.getStateByCodeAndCountry(val, permanentAddress.countryCode);
                       setPermanentAddress({
                         ...permanentAddress,
-                        state: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Dhaka"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        stateCode: val,
+                        state: stateData?.name || "",
+                        city: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select State/Division">
+                        {permanentAddress.state || "Select State/Division"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {State.getStatesOfCountry(permanentAddress.countryCode).map((s) => (
+                        <SelectItem key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+                
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     City
                   </Label>
-                  <Input
+                  <Select
                     value={permanentAddress.city}
-                    onChange={(e) =>
+                    disabled={!permanentAddress.stateCode}
+                    onValueChange={(val) => {
                       setPermanentAddress({
                         ...permanentAddress,
-                        city: e.target.value,
-                      })
-                    }
-                    placeholder="E.g. Dhaka"
-                    className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
-                  />
+                        city: val,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
+                      <SelectValue placeholder="Select City">
+                        {permanentAddress.city || "Select City"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {City.getCitiesOfState(permanentAddress.countryCode, permanentAddress.stateCode).map((c) => (
+                        <SelectItem key={c.name} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">

@@ -21,6 +21,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import ProfileTab from "./tabs/ProfileTab";
+import DashboardJobsTab from "./tabs/DashboardJobsTab";
+import DashboardOrdersTab from "./tabs/DashboardOrdersTab";
+import DashboardFollowList from "./tabs/DashboardFollowList";
 import Container from "../../shared/Container";
 import { createClient } from "../../../lib/client";
 import { useRouter } from "next/navigation";
@@ -75,6 +78,22 @@ export default function Dashboard() {
 
         const profData = profDataArray?.[0];
 
+        // Fetch live counts
+        const { count: followersCount } = await supabase
+          .from("followers")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", user.id);
+
+        const { count: followingCount } = await supabase
+          .from("followers")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", user.id);
+
+        const { count: ordersCount } = await supabase
+          .from("orders")
+          .select("*", { count: "exact", head: true })
+          .eq("professional_id", user.id);
+
         if (profData) {
           const joinedStr = profData.created_at
             ? new Date(profData.created_at).toLocaleDateString("en-US", {
@@ -96,11 +115,13 @@ export default function Dashboard() {
             profession: profData.profession || "Professional",
             headline:
               profData.rating_message || profData.bio || "Update your profile",
-            followers: profData.followers_count || 0,
-            following: profData.following_count || 0,
+            followers: followersCount || 0,
+            following: followingCount || 0,
             ratingsCount: profData.ratings_count || 0,
-            tasksCompleted: profData.orders_count || 0,
-            status: Boolean(profData.is_verified ?? profData.is_verify ?? false),
+            orders_count: ordersCount || 0,
+            status: Boolean(
+              profData.is_verified ?? profData.is_verify ?? false,
+            ),
             avatarUrl: profData.avatar_url || defaultAvatar,
             coverUrl:
               profData.cover_image_url ||
@@ -362,21 +383,21 @@ export default function Dashboard() {
 
             {/* Right side Followers & Following */}
             <div className="flex items-center gap-6 self-start md:self-end pb-1 pt-2 md:pt-0">
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-bold text-foreground text-base md:text-lg">
-                  {userProfile.followers}
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">
+              <div className="text-center">
+                <p className="font-bold text-foreground">
+                  {userProfile.followers || 0}
+                </p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                   Followers
-                </span>
+                </p>
               </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-bold text-foreground text-base md:text-lg">
-                  {userProfile.following}
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">
+              <div className="text-center">
+                <p className="font-bold text-foreground">
+                  {userProfile.following || 0}
+                </p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                   Following
-                </span>
+                </p>
               </div>
             </div>
           </div>
@@ -398,9 +419,6 @@ export default function Dashboard() {
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 Orders
-                <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                  {userProfile.tasksCompleted || "0"}
-                </span>
               </TabsTrigger>
               <TabsTrigger
                 value="jobs"
@@ -421,7 +439,7 @@ export default function Dashboard() {
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 Following
-                <span className="text-muted-foreground/80 text-xs">
+                <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2 py-0.5 rounded-full">
                   {userProfile.following || "0"}
                 </span>
               </TabsTrigger>
@@ -430,7 +448,7 @@ export default function Dashboard() {
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 Followers
-                <span className="text-muted-foreground/80 text-xs">
+                <span className="bg-muted text-muted-foreground text-[11px] font-semibold px-2 py-0.5 rounded-full">
                   {userProfile.followers || "0"}
                 </span>
               </TabsTrigger>
@@ -459,35 +477,10 @@ export default function Dashboard() {
               value="orders"
               className="m-0 border-none outline-none"
             >
-              <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground">
-                <p className="text-foreground font-semibold mb-1">
-                  No Orders Yet
-                </p>
-                <p className="text-xs">
-                  When clients place orders with you, they will appear here.
-                </p>
-              </div>
+              <DashboardOrdersTab userId={userProfile.id} />
             </TabsContent>
-            <TabsContent
-              value="jobs"
-              className="m-0 border-none outline-none"
-            >
-              <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground space-y-3">
-                <Briefcase className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="text-foreground font-semibold">
-                  Active & Applied Jobs
-                </h3>
-                <p className="text-xs max-w-md mx-auto">
-                  View your applied contracts, submitted proposals, and incoming
-                  client invitations.
-                </p>
-                <Button
-                  onClick={() => router.push("/jobs")}
-                  className="mt-2 text-xs font-bold rounded-xl"
-                >
-                  Explore Open Jobs
-                </Button>
-              </div>
+            <TabsContent value="jobs" className="m-0 border-none outline-none">
+              <DashboardJobsTab userId={userProfile.id} />
             </TabsContent>
             <TabsContent
               value="services"
@@ -514,23 +507,13 @@ export default function Dashboard() {
               value="following"
               className="m-0 border-none outline-none"
             >
-              <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground">
-                <p className="text-foreground font-semibold mb-1">Following</p>
-                <p className="text-xs">
-                  Professionals and companies you follow will appear here.
-                </p>
-              </div>
+              <DashboardFollowList userId={userProfile.id} type="following" />
             </TabsContent>
             <TabsContent
               value="followers"
               className="m-0 border-none outline-none"
             >
-              <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground">
-                <p className="text-foreground font-semibold mb-1">Followers</p>
-                <p className="text-xs">
-                  Users who follow your profile updates will appear here.
-                </p>
-              </div>
+              <DashboardFollowList userId={userProfile.id} type="followers" />
             </TabsContent>
           </div>
         </Tabs>

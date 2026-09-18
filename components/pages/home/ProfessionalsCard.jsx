@@ -54,7 +54,7 @@ export default function ProfessionalsCard({ professional }) {
               {professional.full_name}
             </h3>
             <p className="text-muted-foreground text-sm truncate">
-              {professional.profession || "Independent Professional"}
+              {professional.subcategories?.name || professional.categories?.name || professional.profession || "Independent Professional"}
             </p>
             {professional.ratings_count > 0 && (
               <div className="flex items-center gap-1 mt-1">
@@ -68,8 +68,14 @@ export default function ProfessionalsCard({ professional }) {
           </div>
         </div>
 
-        {/* Metadata Row: Location, Orders, Followers */}
+        {/* Metadata Row: Location, Orders, Ratings */}
         <div className="flex flex-wrap items-center gap-3 mb-4 text-muted-foreground text-[13px] font-medium">
+          {location && (
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5" />
+              <span className="truncate max-w-[140px]">{location}</span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5">
             <Briefcase className="w-3.5 h-3.5" />
             <span>{professional.orders_count || 0} Orders</span>

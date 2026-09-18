@@ -87,7 +87,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
         </button>
 
         {/* Search Bar matching screenshot */}
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-md hidden md:block">
           <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -108,15 +108,14 @@ export default function Navbar({ onToggleMobileSidebar }) {
       {/* Right: Actions */}
       <div className="flex items-center gap-2.5 md:gap-3">
         {/* "+ Post a Job" Button matching screenshot */}
-        <Button
-          onClick={() => {
-            router.push("/jobs");
-          }}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-2 h-9 rounded-xl shadow-sm shadow-primary/20 flex items-center gap-1.5 transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Post a Job</span>
-        </Button>
+        <Link href="/jobs/create">
+          <Button
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-2 h-9 rounded-xl shadow-sm shadow-primary/20 flex items-center gap-1.5 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Post a Job</span>
+          </Button>
+        </Link>
 
         {/* Notifications Bell */}
         <button

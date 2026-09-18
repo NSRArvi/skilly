@@ -90,8 +90,8 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           action: () => toast.info("3 unread messages in your inbox"),
         },
         {
-          id: "Community & Guilds",
-          label: "Community & Guilds",
+          id: "Community",
+          label: "Community",
           icon: Users2,
           href: "#",
           action: () => toast.info("Community & Guilds coming soon!"),
@@ -156,7 +156,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   ];
 
   const renderItem = (item) => {
-    const isActive = activeTab === item.id;
+    // Route-based active detection: matches /jobs, /jobs/create, /jobs/[id] etc.
+    const isActive =
+      item.href && item.href !== "#"
+        ? pathname === item.href || pathname.startsWith(item.href + "/")
+        : activeTab === item.id;
     const Icon = item.icon;
 
     const handleClick = () => {

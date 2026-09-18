@@ -5,15 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "../../../lib/client";
 import Container from "../../../components/shared/Container";
 import {
-  Loader2,
   ArrowLeft,
   Star,
   CheckCircle2,
   MapPin,
   Globe,
   Briefcase,
-  Mail,
-  Phone,
   Calendar,
   ShieldCheck,
   Share2,
@@ -23,7 +20,6 @@ import {
   Pencil,
 } from "lucide-react";
 import {
-  FaFacebook,
   FaLinkedin,
   FaGithub,
   FaTwitter,
@@ -38,6 +34,16 @@ import {
 } from "../../../components/ui/avatar";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../../components/ui/dialog";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 import { toast } from "sonner";
 
 export default function ProfessionalDetailsPage() {
@@ -46,6 +52,19 @@ export default function ProfessionalDetailsPage() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Hire Modal State
+  const [isHireModalOpen, setIsHireModalOpen] = useState(false);
+  const [hireTitle, setHireTitle] = useState("");
+  const [hireDescription, setHireDescription] = useState("");
+  const [hireAmount, setHireAmount] = useState("");
+  const [hireDate, setHireDate] = useState("");
+  const [submittingHire, setSubmittingHire] = useState(false);
+
+  // Following State
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [submittingFollow, setSubmittingFollow] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -54,21 +73,51 @@ export default function ProfessionalDetailsPage() {
 
       // Check current auth user
       const {
-        data: { user: currentUser },
+        data: { user: currentUserData },
       } = await supabase.auth.getUser();
 
       // Fetch by either row id or user_id for maximum resilience
       const { data, error } = await supabase
         .from("professionals")
-        .select("*")
+        .select("*, categories(name), subcategories(name)")
         .or(`id.eq.${id},user_id.eq.${id}`)
         .limit(1);
 
       if (data && data.length > 0) {
         const prof = data[0];
-        setProfile(prof);
-        if (currentUser && (currentUser.id === prof.user_id || currentUser.id === prof.id)) {
+        
+        // Fetch live counts directly from followers table
+        const { count: followersCount } = await supabase
+          .from("followers")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", prof.user_id);
+
+        const { count: followingCount } = await supabase
+          .from("followers")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", prof.user_id);
+
+        setProfile({
+          ...prof,
+          followers_count: followersCount || 0,
+          following_count: followingCount || 0
+        });
+        if (
+          currentUserData &&
+          (currentUserData.id === prof.user_id || currentUserData.id === prof.id)
+        ) {
           setIsOwner(true);
+        }
+        setCurrentUser(currentUserData);
+        
+        if (currentUserData) {
+          const { data: followData } = await supabase
+            .from("followers")
+            .select("id")
+            .eq("follower_id", currentUserData.id)
+            .eq("following_id", prof.user_id)
+            .single();
+          if (followData) setIsFollowing(true);
         }
       }
       setLoading(false);
@@ -76,6 +125,84 @@ export default function ProfessionalDetailsPage() {
 
     fetchProfile();
   }, [id]);
+
+  const handleHireSubmit = async () => {
+    if (!currentUser) {
+      toast.error("You must be logged in to send an offer.");
+      return;
+    }
+    if (!hireTitle.trim() || !hireDescription.trim() || !hireAmount || !hireDate) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    setSubmittingHire(true);
+    const supabase = createClient();
+    
+    const { error } = await supabase.from("orders").insert({
+      client_id: currentUser.id,
+      professional_id: profile.user_id,
+      title: hireTitle,
+      description: hireDescription,
+      offer_amount: parseInt(hireAmount),
+      delivery_date: new Date(hireDate).toISOString(),
+      status: "pending",
+    });
+
+    if (error) {
+      toast.error("Failed to send offer: " + error.message);
+    } else {
+      toast.success("Offer sent successfully! The professional will be notified.");
+      setIsHireModalOpen(false);
+      setHireTitle("");
+      setHireDescription("");
+      setHireAmount("");
+      setHireDate("");
+    }
+    setSubmittingHire(false);
+  };
+
+  const handleToggleFollow = async () => {
+    if (!currentUser) {
+      toast.error("You must be logged in to follow professionals.");
+      return;
+    }
+    
+    setSubmittingFollow(true);
+    const supabase = createClient();
+    
+    if (isFollowing) {
+      const { error } = await supabase
+        .from("followers")
+        .delete()
+        .eq("follower_id", currentUser.id)
+        .eq("following_id", profile.user_id);
+        
+      if (!error) {
+        setIsFollowing(false);
+        const newCount = Math.max(0, (profile.followers_count || 0) - 1);
+        setProfile(prev => ({ ...prev, followers_count: newCount }));
+        // Update count in professionals table
+        await supabase.from("professionals").update({ followers_count: newCount }).eq("user_id", profile.user_id);
+      }
+    } else {
+      const { error } = await supabase
+        .from("followers")
+        .insert({
+          follower_id: currentUser.id,
+          following_id: profile.user_id
+        });
+        
+      if (!error) {
+        setIsFollowing(true);
+        const newCount = (profile.followers_count || 0) + 1;
+        setProfile(prev => ({ ...prev, followers_count: newCount }));
+        // Update count in professionals table
+        await supabase.from("professionals").update({ followers_count: newCount }).eq("user_id", profile.user_id);
+      }
+    }
+    setSubmittingFollow(false);
+  };
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -134,7 +261,8 @@ export default function ProfessionalDetailsPage() {
           Professional Not Found
         </h2>
         <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-          The professional profile you are looking for does not exist or may have been removed.
+          The professional profile you are looking for does not exist or may
+          have been removed.
         </p>
         <Button
           onClick={() => router.push("/professionals")}
@@ -155,12 +283,15 @@ export default function ProfessionalDetailsPage() {
     : "Recently";
 
   // Location string
+  const locationParts = [
+    profile.present_address?.city,
+    profile.present_address?.state,
+    profile.present_address?.country,
+  ].filter(Boolean);
   const locationStr =
-    profile.present_address?.city && profile.present_address?.country
-      ? `${profile.present_address.city}, ${profile.present_address.country}`
-      : profile.present_address?.country ||
-        profile.permanent_address?.country ||
-        "Location not set";
+    locationParts.length > 0
+      ? locationParts.join(", ")
+      : profile.permanent_address?.country || "Location not set";
 
   // Verification status strictly from db
   const isVerified = Boolean(profile.is_verified ?? profile.is_verify);
@@ -212,24 +343,24 @@ export default function ProfessionalDetailsPage() {
                 Edit Profile
               </Button>
             ) : (
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (profile.present_address?.whatsapp) {
-                    window.open(
-                      `https://wa.me/${profile.present_address.whatsapp.replace(/[^0-9]/g, "")}`,
-                      "_blank"
-                    );
-                  } else if (profile.email) {
-                    window.location.href = `mailto:${profile.email}?subject=Collaboration Inquiry`;
-                  } else {
-                    toast.info("Inquiry sent to professional!");
-                  }
-                }}
-                className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs shadow-lg shadow-primary/20 px-4"
-              >
-                Hire Me
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={isFollowing ? "outline" : "default"}
+                  onClick={handleToggleFollow}
+                  disabled={submittingFollow}
+                  className={`rounded-xl font-bold text-xs shadow-lg px-4 ${isFollowing ? "bg-background/20 text-white border-white/20 hover:bg-background/40" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"}`}
+                >
+                  {isFollowing ? "Unfollow" : "Follow"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setIsHireModalOpen(true)}
+                  className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs shadow-lg shadow-primary/20 px-4"
+                >
+                  Hire Me
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -293,8 +424,24 @@ export default function ProfessionalDetailsPage() {
                   )}
                 </div>
 
-                <p className="text-sm md:text-base font-semibold text-muted-foreground">
-                  {profile.profession || "Independent Specialist"}
+                <p className="text-sm md:text-base font-semibold text-muted-foreground flex items-center gap-2">
+                  {profile.categories?.name && (
+                    <span className="text-primary">
+                      {profile.categories.name}
+                    </span>
+                  )}
+                  {profile.categories?.name && profile.subcategories?.name && (
+                    <span>•</span>
+                  )}
+                  {profile.subcategories?.name && (
+                    <span>{profile.subcategories.name}</span>
+                  )}
+                  {!profile.categories?.name &&
+                    !profile.subcategories?.name && (
+                      <span>
+                        {profile.profession || "Independent Specialist"}
+                      </span>
+                    )}
                 </p>
 
                 {/* Bio Tagline beneath headline */}
@@ -351,18 +498,18 @@ export default function ProfessionalDetailsPage() {
 
         {/* Sub-Header Badges Bar */}
         <div className="flex items-center justify-between border-b border-border/80 pb-3 mb-6 overflow-x-auto scrollbar-hide text-xs">
-          <div className="flex items-center gap-2 flex-nowrap">
-            <span className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold shadow-sm flex items-center gap-1.5">
+          <div className="flex items-center gap-2 flex-nowrap w-full">
+            <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground font-bold shadow-sm flex items-center gap-1.5">
               Profile & Details
             </span>
-            <span className="px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
+            <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
               Completed Jobs:{" "}
               <span className="text-foreground font-semibold">
                 {profile.orders_count || 0}
               </span>
             </span>
             {profile.hourly_rate && (
-              <span className="px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
+              <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
                 Rate:{" "}
                 <span className="text-primary font-bold">
                   ${profile.hourly_rate}/hr
@@ -370,7 +517,7 @@ export default function ProfessionalDetailsPage() {
               </span>
             )}
             {profile.daily_rate && (
-              <span className="px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
+              <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
                 Daily:{" "}
                 <span className="text-primary font-bold">
                   ${profile.daily_rate}/day
@@ -382,7 +529,9 @@ export default function ProfessionalDetailsPage() {
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground font-semibold pl-4">
             <span
               className={`w-2 h-2 rounded-full ${
-                isVerified ? "bg-primary animate-pulse" : "bg-muted-foreground/60"
+                isVerified
+                  ? "bg-primary animate-pulse"
+                  : "bg-muted-foreground/60"
               }`}
             />
             <span>
@@ -550,7 +699,8 @@ export default function ProfessionalDetailsPage() {
                     Education & Degrees
                   </h2>
                   <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                    Academic qualifications and verified educational institutions
+                    Academic qualifications and verified educational
+                    institutions
                   </p>
                 </div>
 
@@ -628,10 +778,13 @@ export default function ProfessionalDetailsPage() {
                     Hourly Rate
                   </p>
                   <p className="text-lg font-extrabold text-foreground mt-0.5">
-                    {profile.hourly_rate ? `$${profile.hourly_rate}` : "Negotiable"}
+                    {profile.hourly_rate
+                      ? `$${profile.hourly_rate}`
+                      : "Negotiable"}
                     {profile.hourly_rate && (
                       <span className="text-xs font-normal text-muted-foreground">
-                        {" "}/hr
+                        {" "}
+                        /hr
                       </span>
                     )}
                   </p>
@@ -641,10 +794,13 @@ export default function ProfessionalDetailsPage() {
                     Daily Rate
                   </p>
                   <p className="text-lg font-extrabold text-foreground mt-0.5">
-                    {profile.daily_rate ? `$${profile.daily_rate}` : "Negotiable"}
+                    {profile.daily_rate
+                      ? `$${profile.daily_rate}`
+                      : "Negotiable"}
                     {profile.daily_rate && (
                       <span className="text-xs font-normal text-muted-foreground">
-                        {" "}/day
+                        {" "}
+                        /day
                       </span>
                     )}
                   </p>
@@ -653,18 +809,7 @@ export default function ProfessionalDetailsPage() {
 
               <div className="space-y-2 pt-1">
                 <Button
-                  onClick={() => {
-                    if (profile.present_address?.whatsapp) {
-                      window.open(
-                        `https://wa.me/${profile.present_address.whatsapp.replace(/[^0-9]/g, "")}`,
-                        "_blank"
-                      );
-                    } else if (profile.email) {
-                      window.location.href = `mailto:${profile.email}?subject=Collaboration Inquiry`;
-                    } else {
-                      toast.info("Collaboration inquiry initiated!");
-                    }
-                  }}
+                  onClick={() => setIsHireModalOpen(true)}
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-xl h-11 text-xs shadow-lg shadow-primary/20"
                 >
                   Hire Me Now
@@ -752,8 +897,8 @@ export default function ProfessionalDetailsPage() {
                 {profile.social_twitter && (
                   <div className="flex items-center justify-between py-1 border-b border-border/40">
                     <span className="flex items-center gap-2 text-foreground font-medium">
-                      <FaTwitter className="w-4 h-4 text-[#1DA1F2]" />
-                      X (Twitter)
+                      <FaTwitter className="w-4 h-4 text-[#1DA1F2]" />X
+                      (Twitter)
                     </span>
                     <a
                       href={getValidUrl(profile.social_twitter)}
@@ -779,7 +924,10 @@ export default function ProfessionalDetailsPage() {
                       rel="noopener noreferrer"
                       className="text-primary hover:underline font-mono truncate max-w-[150px] flex items-center gap-1"
                     >
-                      {profile.present_address.portfolio.replace(/^https?:\/\//, "")}
+                      {profile.present_address.portfolio.replace(
+                        /^https?:\/\//,
+                        "",
+                      )}
                       <ExternalLink className="w-2.5 h-2.5" />
                     </a>
                   </div>
@@ -831,7 +979,8 @@ export default function ProfessionalDetailsPage() {
                     </p>
                     <p>{profile.present_address.fullAddress}</p>
                     <p>
-                      {profile.present_address.city}, {profile.present_address.state}{" "}
+                      {profile.present_address.city},{" "}
+                      {profile.present_address.state}{" "}
                       {profile.present_address.zipcode}
                     </p>
                     <p className="font-medium text-foreground">
@@ -861,6 +1010,75 @@ export default function ProfessionalDetailsPage() {
           </div>
         </div>
       </Container>
+      {/* Hire Modal */}
+      <Dialog open={isHireModalOpen} onOpenChange={setIsHireModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-foreground">Send an Offer</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm">
+              Propose a project to {profile.full_name}. They will review it and get back to you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Project Title</Label>
+              <Input
+                value={hireTitle}
+                onChange={(e) => setHireTitle(e.target.value)}
+                placeholder="e.g. Frontend Development for E-commerce"
+                className="bg-background/50 border-border text-sm h-10 rounded-xl"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Description & Scope</Label>
+              <textarea
+                value={hireDescription}
+                onChange={(e) => setHireDescription(e.target.value)}
+                placeholder="Describe what you need help with..."
+                rows={4}
+                className="w-full bg-background/50 border border-border text-foreground rounded-xl text-sm p-3 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none transition-all"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-foreground">Offer Amount (BDT)</Label>
+                <Input
+                  type="number"
+                  value={hireAmount}
+                  onChange={(e) => setHireAmount(e.target.value)}
+                  placeholder="e.g. 5000"
+                  className="bg-background/50 border-border text-sm h-10 rounded-xl"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-foreground">Delivery Date</Label>
+                <Input
+                  type="date"
+                  value={hireDate}
+                  onChange={(e) => setHireDate(e.target.value)}
+                  className="bg-background/50 border-border text-sm h-10 rounded-xl"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsHireModalOpen(false)}
+              className="rounded-xl h-10 font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleHireSubmit}
+              disabled={submittingHire}
+              className="rounded-xl h-10 bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+            >
+              {submittingHire ? "Sending..." : "Send Offer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
