@@ -15,6 +15,7 @@ import {
   CheckCircle,
   XCircle,
   MessageSquare,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "../../../../lib/client";
 import { toast } from "sonner";
@@ -301,8 +302,8 @@ export default function JobApplicantsPage() {
                             size="sm"
                             className="h-8 rounded-lg text-xs font-semibold gap-1.5"
                           >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            Chat
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            Message
                           </Button>
                         </Link>
                       )}

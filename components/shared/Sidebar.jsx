@@ -19,6 +19,7 @@ import {
   HelpCircle,
   LogOut,
   X,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "../../lib/client";
 import { toast } from "sonner";
@@ -84,15 +85,14 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
         {
           id: "Messages",
           label: "Messages",
-          icon: MessageSquare,
+          icon: MessageCircle,
           href: "/messages",
         },
         {
           id: "Community",
           label: "Community",
           icon: Users2,
-          href: "#",
-          action: () => toast.info("Community & Guilds coming soon!"),
+          href: "/community",
         },
       ],
     },
@@ -135,7 +135,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       id: "Help & Support",
       label: "Help & Support",
       icon: HelpCircle,
-      action: () => toast.info("Skilly Support: help@skilly.io"),
+      href: "/support",
     },
     {
       id: "Log out",
@@ -271,7 +271,11 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
                 type="button"
                 onClick={() => {
                   if (setMobileOpen) setMobileOpen(false);
-                  item.action();
+                  if (item.action) {
+                    item.action();
+                  } else if (item.href) {
+                    router.push(item.href);
+                  }
                 }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
                   item.isDestructive

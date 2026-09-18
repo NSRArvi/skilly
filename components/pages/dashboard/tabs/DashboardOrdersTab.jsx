@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Loader2,
   Calendar,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "../../../../lib/client";
 import { toast } from "sonner";
@@ -287,13 +288,15 @@ export default function DashboardOrdersTab({ userId }) {
                     )}
 
                     {canChat && (
-                      <Link href={`/messages?user_id=${view === "received" ? order.client_id : order.professional_id}`}>
+                      <Link
+                        href={`/messages?user_id=${view === "received" ? order.client_id : order.professional_id}`}
+                      >
                         <Button
                           size="sm"
                           className="h-8 rounded-lg text-[11px] font-bold gap-1"
                         >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          Chat
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          Message
                         </Button>
                       </Link>
                     )}

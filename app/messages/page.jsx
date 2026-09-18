@@ -15,6 +15,7 @@ import {
   Phone,
   Video,
   Plus,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -402,7 +403,7 @@ function MessagesContent() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1">
+              {/* <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -424,7 +425,7 @@ function MessagesContent() {
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
-              </div>
+              </div> */}
             </div>
 
             {/* Chat Messages */}
@@ -521,13 +522,21 @@ function MessagesContent() {
                 onSubmit={handleSendMessage}
                 className="max-w-4xl mx-auto relative flex items-end gap-2 bg-card/50 border border-border/80 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 rounded-2xl p-1.5 transition-all shadow-sm"
               >
-                <Button
+                {/* <Button
                   type="button"
                   variant="ghost"
                   size="icon"
                   className="h-10 w-10 flex-shrink-0 rounded-xl text-muted-foreground hover:bg-muted/80"
                 >
                   <Plus className="w-5 h-5" />
+                </Button> */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 flex-shrink-0 rounded-xl text-muted-foreground hover:bg-muted/80"
+                >
+                  <MessageCircle className="w-5 h-5" />
                 </Button>
                 <textarea
                   value={newMessage}

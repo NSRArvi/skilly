@@ -13,8 +13,9 @@ import {
   Sun,
   Menu,
   LayoutDashboard,
-  UserCircle,
   LogOut,
+  MessageCircle,
+  Users2,
 } from "lucide-react";
 import { createClient } from "../../lib/client";
 import { useRouter } from "next/navigation";
@@ -109,9 +110,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
       <div className="flex items-center gap-2.5 md:gap-3">
         {/* "+ Post a Job" Button matching screenshot */}
         <Link href="/jobs/create">
-          <Button
-            className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-2 h-9 rounded-xl shadow-sm shadow-primary/20 flex items-center gap-1.5 transition-all"
-          >
+          <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-2 h-9 rounded-xl shadow-sm shadow-primary/20 flex items-center gap-1.5 transition-all">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Post a Job</span>
           </Button>
@@ -185,12 +184,20 @@ export default function Navbar({ onToggleMobileSidebar }) {
                   Dashboard
                 </Link>
                 <Link
-                  href="/professionals"
+                  href="/messages"
                   onClick={() => setPopoverOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
                 >
-                  <UserCircle className="w-3.5 h-3.5" />
-                  Professionals
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Messages
+                </Link>
+                <Link
+                  href="/community"
+                  onClick={() => setPopoverOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                >
+                  <Users2 className="w-3.5 h-3.5" />
+                  Community
                 </Link>
                 <div className="h-px w-full bg-border/60" />
                 <button
