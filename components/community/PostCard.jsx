@@ -10,13 +10,16 @@ import {
   Share2, 
   MoreHorizontal,
   Trash2,
-  Edit
+  Edit,
+  Archive,
+  Eye
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "../../lib/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import ConfirmDialog from "../shared/ConfirmDialog";
+import ImageGallery from "../shared/ImageGallery";
 
 export default function PostCard({ 
   post, 
@@ -35,6 +38,10 @@ export default function PostCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Gallery State
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  
   const isOwner = currentUser?.id === post.user_id;
   const postAuthor = post.author || {};
   const images = post.images || [];
@@ -48,7 +55,7 @@ export default function PostCard({
         .select('id')
         .eq('post_id', post.id)
         .eq('user_id', currentUser.id)
-        .single();
+        .maybeSingle();
         
       if (data) setIsLiked(true);
     };
@@ -182,12 +189,7 @@ export default function PostCard({
     if (totalImages >= 3) gridClass += " grid-cols-2";
 
     return (
-      <div className={gridClass} onClick={(e) => {
-        if (!isDetailView) {
-          e.preventDefault(); 
-          router.push(`/community/${post.id}`);
-        }
-      }}>
+      <div className={gridClass}>
         {images.slice(0, 4).map((url, index) => {
           let imgClass = "w-full h-full object-cover bg-muted";
           if (totalImages === 1) imgClass += " max-h-[400px]";
@@ -197,7 +199,16 @@ export default function PostCard({
           else if (totalImages === 4) imgClass += " h-[150px]";
           
           return (
-            <div key={index} className="relative cursor-pointer hover:opacity-95 transition-opacity">
+            <div 
+              key={index} 
+              className="relative cursor-pointer hover:opacity-95 transition-opacity"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setGalleryIndex(index);
+                setGalleryOpen(true);
+              }}
+            >
               <img src={url} alt={`Post attachment ${index+1}`} className={imgClass} />
               {images.length > 4 && index === 3 && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-xl">
@@ -219,6 +230,12 @@ export default function PostCard({
       ref={observerRef} 
       className="bg-card border border-border/60 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow relative"
     >
+      {post.is_archived && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg px-3 py-2 mb-4 text-xs font-bold flex items-center gap-2">
+          <Archive className="w-3.5 h-3.5" /> Archived by Admin - Hidden from public feed
+        </div>
+      )}
+      
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -323,6 +340,11 @@ export default function PostCard({
           </button>
         </Wrapper>
 
+        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground px-2 py-1.5 rounded-lg">
+          <Eye className="w-4 h-4" />
+          {post.impressions_count || 0}
+        </div>
+
         <button 
           onClick={handleShare}
           className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:bg-muted px-2 py-1.5 rounded-lg transition-colors ml-auto"
@@ -340,6 +362,13 @@ export default function PostCard({
         description="Are you sure you want to delete this post? This action cannot be undone."
         confirmText="Delete"
         isLoading={isDeleting}
+      />
+
+      <ImageGallery 
+        images={images}
+        initialIndex={galleryIndex}
+        isOpen={galleryOpen}
+        onClose={() => setGalleryOpen(false)}
       />
     </div>
   );

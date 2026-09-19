@@ -8,7 +8,7 @@ import PostCard from "@/components/community/PostCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ArrowLeft, Send, CornerDownRight, X } from "lucide-react";
+import { Loader2, ArrowLeft, Send, CornerDownRight, X, Heart } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -22,6 +22,7 @@ export default function PostDetailPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
+  const [reactions, setReactions] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const [newComment, setNewComment] = useState("");
@@ -66,8 +67,11 @@ export default function PostDetailPage() {
       author: postProfile || { full_name: "Unknown", avatar_url: null, user_id: postData.user_id }
     });
 
-    // 3. Fetch Comments
-    await fetchComments(user);
+    // 3. Fetch Comments & Reactions
+    await Promise.all([
+      fetchComments(user),
+      fetchReactions()
+    ]);
     
     setLoading(false);
   };
@@ -105,6 +109,32 @@ export default function PostDetailPage() {
       setComments(rootComments);
     } else {
       setComments([]);
+    }
+  };
+
+  const fetchReactions = async () => {
+    const { data: reactionsData } = await supabase
+      .from("community_reactions")
+      .select("*")
+      .eq("post_id", postId);
+      
+    if (reactionsData && reactionsData.length > 0) {
+      const userIds = [...new Set(reactionsData.map(r => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("professionals")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+        
+      const enrichedReactions = reactionsData.map(reaction => {
+        const profile = profiles?.find(p => p.user_id === reaction.user_id);
+        return {
+          ...reaction,
+          author: profile || { full_name: "Unknown User", avatar_url: null, user_id: reaction.user_id }
+        };
+      });
+      setReactions(enrichedReactions);
+    } else {
+      setReactions([]);
     }
   };
 
@@ -173,7 +203,7 @@ export default function PostDetailPage() {
             <span className="text-[11px] text-muted-foreground">
               {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
             </span>
-            {!isReply && (
+            {!isReply && currentUser && (
               <button 
                 onClick={() => setReplyTo({ id: comment.id, name: comment.author.full_name })}
                 className="text-[11px] font-bold text-muted-foreground hover:text-foreground transition-colors"
@@ -224,6 +254,24 @@ export default function PostDetailPage() {
           isDetailView={true}
         />
 
+        {reactions.length > 0 && (
+          <div className="mt-5 flex items-center flex-wrap gap-1.5 bg-card border border-border/50 p-3 rounded-2xl">
+            <div className="text-[11px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 mr-2">
+              <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> {reactions.length} Likes
+            </div>
+            {reactions.map(reaction => (
+              <Link key={reaction.id} href={`/professionals/${reaction.author.user_id}`} title={reaction.author.full_name}>
+                <Avatar className="w-7 h-7 border border-border hover:scale-110 transition-transform">
+                  <AvatarImage src={reaction.author.avatar_url} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">
+                    {reaction.author.full_name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+            ))}
+          </div>
+        )}
+
         <div className="mt-8">
           <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
             Comments 
@@ -248,39 +296,54 @@ export default function PostDetailPage() {
       {/* Sticky Comment Input */}
       <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background/80 backdrop-blur-xl border-t border-border/60 p-4 z-40">
         <Container className="max-w-3xl relative">
-          {replyTo && (
-            <div className="absolute -top-10 left-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-t-lg flex items-center gap-2 shadow-sm">
-              Replying to {replyTo.name}
-              <button onClick={() => setReplyTo(null)} className="ml-2 bg-primary-foreground/20 rounded-full p-0.5 hover:bg-primary-foreground/40">
-                <X className="w-3 h-3" />
-              </button>
+          {!currentUser ? (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-card border border-border/60 p-4 rounded-2xl shadow-sm">
+              <p className="text-sm text-foreground font-medium text-center sm:text-left">
+                Join the conversation to react and comment.
+              </p>
+              <Link href="/login">
+                <Button className="rounded-xl font-bold px-6 shadow-sm shadow-primary/20">
+                  Log In
+                </Button>
+              </Link>
             </div>
-          )}
-          <form onSubmit={handleSubmitComment} className="flex items-center gap-3 relative z-10">
-            <Avatar className="w-10 h-10 border border-border/50 hidden sm:block">
-              {currentUser?.user_metadata?.avatar_url ? (
-                <AvatarImage src={currentUser.user_metadata.avatar_url} />
-              ) : (
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {currentUser?.email?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
+          ) : (
+            <>
+              {replyTo && (
+                <div className="absolute -top-10 left-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-t-lg flex items-center gap-2 shadow-sm">
+                  Replying to {replyTo.name}
+                  <button onClick={() => setReplyTo(null)} className="ml-2 bg-primary-foreground/20 rounded-full p-0.5 hover:bg-primary-foreground/40">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               )}
-            </Avatar>
-            <Input 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={replyTo ? `Reply to ${replyTo.name}...` : "Write a comment..."}
-              className="flex-1 bg-card border-border/60 focus:border-primary/50 focus:ring-primary/20 rounded-2xl h-11"
-            />
-            <Button 
-              type="submit" 
-              disabled={!newComment.trim() || submittingComment}
-              className="h-11 rounded-xl px-4 font-bold shadow-sm shadow-primary/20"
-            >
-              {submittingComment ? <Loader2 className="w-4 h-4 animate-spin sm:mr-2" /> : <Send className="w-4 h-4 sm:mr-2" />}
-              <span className="hidden sm:inline">Comment</span>
-            </Button>
-          </form>
+              <form onSubmit={handleSubmitComment} className="flex items-center gap-3 relative z-10">
+                <Avatar className="w-10 h-10 border border-border/50 hidden sm:block">
+                  {currentUser?.user_metadata?.avatar_url ? (
+                    <AvatarImage src={currentUser.user_metadata.avatar_url} />
+                  ) : (
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {currentUser?.email?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <Input 
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder={replyTo ? `Reply to ${replyTo.name}...` : "Write a comment..."}
+                  className="flex-1 bg-card border-border/60 focus:border-primary/50 focus:ring-primary/20 rounded-2xl h-11"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!newComment.trim() || submittingComment}
+                  className="h-11 rounded-xl px-4 font-bold shadow-sm shadow-primary/20"
+                >
+                  {submittingComment ? <Loader2 className="w-4 h-4 animate-spin sm:mr-2" /> : <Send className="w-4 h-4 sm:mr-2" />}
+                  <span className="hidden sm:inline">Comment</span>
+                </Button>
+              </form>
+            </>
+          )}
         </Container>
       </div>
     </div>

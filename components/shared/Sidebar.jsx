@@ -72,10 +72,10 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           href: "/jobs",
         },
         {
-          id: "Dashboard",
-          label: "Dashboard",
-          icon: LayoutDashboard,
-          href: "/dashboard",
+          id: "Community",
+          label: "Community",
+          icon: Users2,
+          href: "/community",
         },
       ],
     },
@@ -83,16 +83,16 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
       title: "CONNECT",
       items: [
         {
+          id: "Dashboard",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+          href: "/dashboard",
+        },
+        {
           id: "Messages",
           label: "Messages",
           icon: MessageCircle,
           href: "/messages",
-        },
-        {
-          id: "Community",
-          label: "Community",
-          icon: Users2,
-          href: "/community",
         },
       ],
     },

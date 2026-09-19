@@ -31,6 +31,7 @@ export default function ProfessionalsPage() {
   const [selectedCountry, setSelectedCountry] = useState("BD");
   const [selectedState, setSelectedState] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
+  const [selectedVerified, setSelectedVerified] = useState("all");
 
   const [sortBy, setSortBy] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,11 +90,16 @@ export default function ProfessionalsPage() {
       query = query.ilike("full_name", `%${searchQuery.trim()}%`);
     }
 
+    // Verified filter
+    if (selectedVerified !== "all") {
+      query = query.eq("is_verified", selectedVerified === "true");
+    }
+
     // Pagination
     query = query.range(rangeStart, rangeEnd);
 
     return query;
-  }, [selectedCategory, selectedSubcategory, selectedCountry, selectedState, selectedCity, sortBy, searchQuery]);
+  }, [selectedCategory, selectedSubcategory, selectedCountry, selectedState, selectedCity, selectedVerified, sortBy, searchQuery]);
 
   // Initial + filter-change fetch
   useEffect(() => {
@@ -164,6 +170,7 @@ export default function ProfessionalsPage() {
     selectedCountry !== "all" && selectedCountry !== "BD",
     selectedState !== "all",
     selectedCity !== "all",
+    selectedVerified !== "all",
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
@@ -172,6 +179,7 @@ export default function ProfessionalsPage() {
     setSelectedCountry("BD");
     setSelectedState("all");
     setSelectedCity("all");
+    setSelectedVerified("all");
     setSearchQuery("");
     setSortBy("default");
   };
@@ -212,6 +220,20 @@ export default function ProfessionalsPage() {
                   </button>
                 )}
               </div>
+              
+              {/* Filter by Verification */}
+              <Select value={selectedVerified} onValueChange={setSelectedVerified}>
+                <SelectTrigger className="h-9 w-[160px] rounded-xl bg-card border-border text-xs font-semibold">
+                  <SelectValue placeholder="Verification">
+                    {selectedVerified === "all" ? "All Profiles" : selectedVerified === "true" ? "Verified Only" : "Unverified Only"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border text-foreground">
+                  <SelectItem value="all">All Profiles</SelectItem>
+                  <SelectItem value="true">Verified Only</SelectItem>
+                  <SelectItem value="false">Unverified Only</SelectItem>
+                </SelectContent>
+              </Select>
 
               {/* Sort */}
               <Select value={sortBy} onValueChange={setSortBy}>

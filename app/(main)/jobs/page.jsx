@@ -17,17 +17,13 @@ import {
   Briefcase,
   MapPin,
   Clock,
-  DollarSign,
   Building2,
-  CheckCircle2,
   ArrowRight,
   SlidersHorizontal,
   Plus,
-  Timer,
-  Loader2,
+  ShieldCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/client";
-import { toast } from "sonner";
 import Link from "next/link";
 
 export default function JobsPage() {
@@ -41,14 +37,21 @@ export default function JobsPage() {
   const [selectedSubcategory, setSelectedSubcategory] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
+  const [selectedVerified, setSelectedVerified] = useState("all");
 
   // Fetch taxonomy
   useEffect(() => {
     const fetchTaxonomy = async () => {
       const supabase = createClient();
-      const { data: catData } = await supabase.from("categories").select("*").order("name");
+      const { data: catData } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
       if (catData) setCategories(catData);
-      const { data: subData } = await supabase.from("subcategories").select("*").order("name");
+      const { data: subData } = await supabase
+        .from("subcategories")
+        .select("*")
+        .order("name");
       if (subData) setSubcategories(subData);
     };
     fetchTaxonomy();
@@ -79,6 +82,9 @@ export default function JobsPage() {
       if (selectedType !== "all") {
         query = query.eq("job_type", selectedType);
       }
+      if (selectedVerified !== "all") {
+        query = query.eq("is_verified", selectedVerified === "true");
+      }
       if (searchTerm.trim()) {
         query = query.ilike("title", `%${searchTerm.trim()}%`);
       }
@@ -89,14 +95,30 @@ export default function JobsPage() {
     };
 
     fetchJobs();
-  }, [selectedCategory, selectedSubcategory, selectedStatus, selectedType, searchTerm]);
+  }, [
+    selectedCategory,
+    selectedSubcategory,
+    selectedStatus,
+    selectedType,
+    selectedVerified,
+    searchTerm,
+  ]);
 
   const currencySymbol = { BDT: "৳", USD: "$", EUR: "€", GBP: "£" };
 
   const statusConfig = {
-    opening_soon: { label: "Opening Soon", className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
-    running: { label: "Running", className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
-    over: { label: "Over", className: "bg-red-500/15 text-red-600 border-red-500/30" },
+    opening_soon: {
+      label: "Opening Soon",
+      className: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+    },
+    running: {
+      label: "Running",
+      className: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+    },
+    over: {
+      label: "Over",
+      className: "bg-red-500/15 text-red-600 border-red-500/30",
+    },
   };
 
   return (
@@ -109,7 +131,8 @@ export default function JobsPage() {
               Jobs & Projects
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {!loading && `${jobs.length} job${jobs.length !== 1 ? "s" : ""} found`}
+              {!loading &&
+                `${jobs.length} job${jobs.length !== 1 ? "s" : ""} found`}
             </p>
           </div>
           <Link href="/jobs/create">
@@ -143,7 +166,9 @@ export default function JobsPage() {
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
                 <SelectValue placeholder="Status">
-                  {selectedStatus === "all" ? "All Status" : statusConfig[selectedStatus]?.label}
+                  {selectedStatus === "all"
+                    ? "All Status"
+                    : statusConfig[selectedStatus]?.label}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-card border-border text-foreground">
@@ -157,7 +182,9 @@ export default function JobsPage() {
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
                 <SelectValue placeholder="Job Type">
-                  {selectedType === "all" ? "All Types" : selectedType.replace("-", " ")}
+                  {selectedType === "all"
+                    ? "All Types"
+                    : selectedType.replace("-", " ")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-card border-border text-foreground">
@@ -168,12 +195,32 @@ export default function JobsPage() {
                 <SelectItem value="freelance">Freelance</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={selectedVerified} onValueChange={setSelectedVerified}>
+              <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
+                <SelectValue placeholder="Verification">
+                  {selectedVerified === "all"
+                    ? "All Jobs"
+                    : selectedVerified === "true"
+                    ? "Verified Only"
+                    : "Unverified Only"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border text-foreground">
+                <SelectItem value="all">All Jobs</SelectItem>
+                <SelectItem value="true">Verified Only</SelectItem>
+                <SelectItem value="false">Unverified Only</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Category pills */}
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
             <button
-              onClick={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}
+              onClick={() => {
+                setSelectedCategory("all");
+                setSelectedSubcategory("all");
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 selectedCategory === "all"
                   ? "bg-primary text-primary-foreground shadow-sm"
@@ -185,7 +232,10 @@ export default function JobsPage() {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => { setSelectedCategory(cat.id); setSelectedSubcategory("all"); }}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setSelectedSubcategory("all");
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   selectedCategory === cat.id
                     ? "bg-primary text-primary-foreground shadow-sm"
@@ -208,21 +258,23 @@ export default function JobsPage() {
                     : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
                 }`}
               >
-                All in {categories.find(c => c.id === selectedCategory)?.name}
+                All in {categories.find((c) => c.id === selectedCategory)?.name}
               </button>
-              {subcategories.filter(s => s.category_id === selectedCategory).map(sub => (
-                <button
-                  key={sub.id}
-                  onClick={() => setSelectedSubcategory(sub.id)}
-                  className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    selectedSubcategory === sub.id
-                      ? "bg-foreground text-background"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              ))}
+              {subcategories
+                .filter((s) => s.category_id === selectedCategory)
+                .map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setSelectedSubcategory(sub.id)}
+                    className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      selectedSubcategory === sub.id
+                        ? "bg-foreground text-background"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
+                    }`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
             </div>
           )}
         </div>
@@ -231,7 +283,10 @@ export default function JobsPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-card border border-border rounded-2xl p-6 animate-pulse">
+              <div
+                key={i}
+                className="bg-card border border-border rounded-2xl p-6 animate-pulse"
+              >
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="h-4 w-1/4 bg-muted rounded" />
@@ -253,15 +308,29 @@ export default function JobsPage() {
         ) : jobs.length > 0 ? (
           <div className="space-y-4">
             {jobs.map((job) => {
-              const sym = currencySymbol[job.salary_currency] || job.salary_currency || "";
-              const salaryStr = job.salary_min && job.salary_max
-                ? `${sym}${job.salary_min.toLocaleString()} - ${sym}${job.salary_max.toLocaleString()}`
-                : job.salary_min ? `From ${sym}${job.salary_min.toLocaleString()}`
-                : job.salary_max ? `Up to ${sym}${job.salary_max.toLocaleString()}`
-                : "Negotiable";
+              const sym =
+                currencySymbol[job.salary_currency] ||
+                job.salary_currency ||
+                "";
+              const salaryStr =
+                job.salary_min && job.salary_max
+                  ? `${sym}${job.salary_min.toLocaleString()} - ${sym}${job.salary_max.toLocaleString()}`
+                  : job.salary_min
+                    ? `From ${sym}${job.salary_min.toLocaleString()}`
+                    : job.salary_max
+                      ? `Up to ${sym}${job.salary_max.toLocaleString()}`
+                      : "Negotiable";
 
-              const locationParts = [job.full_address, job.city, job.state, job.country].filter(Boolean);
-              const locationStr = locationParts.length > 0 ? locationParts.join(", ") : job.location_type;
+              const locationParts = [
+                job.full_address,
+                job.city,
+                job.state,
+                job.country,
+              ].filter(Boolean);
+              const locationStr =
+                locationParts.length > 0
+                  ? locationParts.join(", ")
+                  : job.location_type;
 
               const st = statusConfig[job.status] || statusConfig.running;
               const timeAgo = getTimeAgo(job.created_at);
@@ -278,7 +347,14 @@ export default function JobsPage() {
                               {job.company_name}
                             </span>
                           )}
-                          <Badge className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${st.className}`}>
+                          {job.is_verified && (
+                            <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30 text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1">
+                              <ShieldCheck className="w-3 h-3" /> Verified
+                            </Badge>
+                          )}
+                          <Badge
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${st.className}`}
+                          >
                             {st.label}
                           </Badge>
                           {job.priority === "urgent" && (
@@ -310,7 +386,10 @@ export default function JobsPage() {
                             </span>
                           )}
                           {job.skills?.slice(0, 3).map((skill) => (
-                            <span key={skill} className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-background/70 border border-border text-foreground">
+                            <span
+                              key={skill}
+                              className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-background/70 border border-border text-foreground"
+                            >
                               {skill}
                             </span>
                           ))}
@@ -325,7 +404,9 @@ export default function JobsPage() {
                       {/* Right side */}
                       <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-border/60 flex-shrink-0">
                         <div className="text-left md:text-right">
-                          <p className="text-base md:text-lg font-bold text-foreground">{salaryStr}</p>
+                          <p className="text-base md:text-lg font-bold text-foreground">
+                            {salaryStr}
+                          </p>
                           <p className="text-xs text-muted-foreground flex items-center md:justify-end gap-1 capitalize">
                             <MapPin className="w-3 h-3" />
                             {locationStr}
@@ -345,7 +426,9 @@ export default function JobsPage() {
         ) : (
           <div className="text-center py-24 bg-card border border-border rounded-3xl">
             <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No jobs found</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              No jobs found
+            </h3>
             <p className="text-muted-foreground text-sm mb-6">
               Try adjusting your filters or be the first to post a job!
             </p>

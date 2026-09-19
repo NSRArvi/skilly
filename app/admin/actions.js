@@ -20,7 +20,7 @@ function getAdminSupabase() {
 }
 
 export async function toggleProfessionalVerification(userId, newStatus) {
-  const supabase = await getAdminSupabase();
+  const supabase = getAdminSupabase();
   
   const { data, error } = await supabase
     .from("professionals")
@@ -37,4 +37,146 @@ export async function toggleProfessionalVerification(userId, newStatus) {
   }
 
   return { success: true, data: data[0] };
+}
+
+export async function toggleJobVerification(jobId, newStatus) {
+  const supabase = getAdminSupabase();
+  
+  const { data, error } = await supabase
+    .from("jobs")
+    .update({ is_verified: newStatus })
+    .eq("id", jobId)
+    .select();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  
+  if (!data || data.length === 0) {
+    return { success: false, error: "Row Level Security (RLS) blocked the update. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS." };
+  }
+
+  return { success: true, data: data[0] };
+}
+
+export async function togglePostArchive(postId, newStatus) {
+  const supabase = getAdminSupabase();
+  
+  const { data, error } = await supabase
+    .from("community_posts")
+    .update({ is_archived: newStatus })
+    .eq("id", postId)
+    .select();
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  
+  if (!data || data.length === 0) {
+    return { success: false, error: "Row Level Security (RLS) blocked the update. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local to bypass RLS." };
+  }
+
+  return { success: true, data: data[0] };
+}
+
+export async function getSupportMessages() {
+  const supabase = getAdminSupabase();
+  
+  const { data, error } = await supabase
+    .from("support_messages")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data || [] };
+}
+
+export async function deleteSupportMessage(id) {
+  const supabase = getAdminSupabase();
+  
+  const { error } = await supabase
+    .from("support_messages")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export async function getOrders() {
+  const supabase = getAdminSupabase();
+  
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  // Also fetch profiles for client and professional
+  const userIds = [...new Set([
+    ...(data || []).map(o => o.client_id),
+    ...(data || []).map(o => o.professional_id)
+  ])].filter(Boolean);
+
+  let profiles = [];
+  if (userIds.length > 0) {
+    const { data: profilesData } = await supabase
+      .from("professionals")
+      .select("user_id, full_name, avatar_url")
+      .in("user_id", userIds);
+    if (profilesData) profiles = profilesData;
+  }
+
+  const enrichedOrders = (data || []).map(order => ({
+    ...order,
+    client: profiles.find(p => p.user_id === order.client_id) || null,
+    professional: profiles.find(p => p.user_id === order.professional_id) || null
+  }));
+
+  return { success: true, data: enrichedOrders };
+}
+
+export async function getJobApplicationsForAdmin(jobId) {
+  const supabase = getAdminSupabase();
+  
+  const { data: appsData, error } = await supabase
+    .from("job_applications")
+    .select("*")
+    .eq("job_id", jobId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  if (!appsData || appsData.length === 0) {
+    return { success: true, data: [] };
+  }
+
+  const applicantIds = [...new Set(appsData.map(a => a.applicant_id))];
+  
+  let profiles = [];
+  if (applicantIds.length > 0) {
+    const { data: profilesData } = await supabase
+      .from("professionals")
+      .select("user_id, full_name, avatar_url")
+      .in("user_id", applicantIds);
+    if (profilesData) profiles = profilesData;
+  }
+
+  const enrichedApps = appsData.map(app => ({
+    ...app,
+    applicant: profiles.find(p => p.user_id === app.applicant_id) || null
+  }));
+
+  return { success: true, data: enrichedApps };
 }

@@ -42,6 +42,8 @@ export default function CommunityPage() {
 
     if (activeTab === "activities" && user) {
       query = query.eq("user_id", user.id);
+    } else {
+      query = query.not("is_archived", "eq", true);
     }
 
     const { data: postsData, error: postsError } = await query;

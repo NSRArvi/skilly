@@ -17,19 +17,13 @@ export default function ProfessionalsCard({ professional }) {
   return (
     <Link
       href={`/professionals/${professional.id}`}
-      className={`bg-card border rounded-2xl p-5 flex flex-col justify-between h-full hover:shadow-md transition-all group block cursor-pointer ${
-        isVerified
-          ? "border-primary/35 hover:border-primary"
-          : "border-border hover:border-primary/50"
-      }`}
+      className={`bg-card border border-border rounded-2xl p-5 flex flex-col justify-between h-full hover:shadow-md hover:border-primary/50 transition-all group block cursor-pointer`}
     >
       <div>
         <div className="flex gap-4 mb-3">
           <div className="relative h-14 w-14 rounded-full flex-shrink-0">
             <div
-              className={`h-14 w-14 rounded-full bg-muted overflow-hidden relative ${
-                isVerified ? "ring-2 ring-primary/40" : ""
-              }`}
+              className={`h-14 w-14 rounded-full bg-muted overflow-hidden relative`}
             >
               <Image
                 src={
@@ -41,17 +35,16 @@ export default function ProfessionalsCard({ professional }) {
                 className="object-cover"
               />
             </div>
-            {/* Verified Badge */}
-            {isVerified && (
-              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-[2px] shadow-sm">
-                <CheckCircle className="w-4 h-4 text-primary fill-primary/20" />
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col overflow-hidden justify-center">
-            <h3 className="text-foreground font-semibold truncate text-base group-hover:text-primary transition-colors">
+            <h3 className="text-foreground font-semibold truncate text-base group-hover:text-primary transition-colors flex items-center gap-1.5">
               {professional.full_name}
+              {isVerified && (
+                <span className="bg-blue-500/15 text-blue-600 border border-blue-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 uppercase tracking-wider">
+                  <CheckCircle className="w-2.5 h-2.5" /> Verified
+                </span>
+              )}
             </h3>
             <p className="text-muted-foreground text-sm truncate">
               {professional.subcategories?.name || professional.categories?.name || professional.profession || "Independent Professional"}
