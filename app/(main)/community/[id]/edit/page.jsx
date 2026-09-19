@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function EditCommunityPostPage() {
   const params = useParams();
   const router = useRouter();
+  const { openModal } = useAuthModal();
   const postId = params.id;
   const supabase = createClient();
   
@@ -28,7 +30,7 @@ export default function EditCommunityPostPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error("Please login first.");
-      router.push("/login");
+      openModal();
       return;
     }
     setCurrentUser(user);

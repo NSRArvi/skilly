@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, Image as ImageIcon, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function CreateCommunityPostPage() {
   const router = useRouter();
+  const { openModal } = useAuthModal();
   const supabase = createClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [content, setContent] = useState("");
@@ -25,7 +27,7 @@ export default function CreateCommunityPostPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("You must be logged in to create a post.");
-        router.push("/login");
+        openModal();
         return;
       }
       setCurrentUser(user);

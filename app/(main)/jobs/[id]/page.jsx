@@ -32,9 +32,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function JobDetailsPage() {
   const { id } = useParams();
+  const { requireAuth } = useAuthModal();
   const [job, setJob] = useState(null);
   const [poster, setPoster] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -483,7 +485,7 @@ export default function JobDetailsPage() {
                 </Button>
               ) : (
                 <Button
-                  onClick={() => setApplyModalOpen(true)}
+                  onClick={(e) => requireAuth(e, () => setApplyModalOpen(true))}
                   className="w-full h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-sm shadow-md shadow-primary/20 mb-3"
                 >
                   Apply Now

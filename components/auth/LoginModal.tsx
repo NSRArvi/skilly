@@ -3,11 +3,21 @@
 import React, { useState } from "react";
 import { createClient } from "@/lib/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-export default function LoginPage() {
+interface LoginModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [error, setError] = useState("");
-  const router = useRouter();
   const supabase = createClient();
 
   const handleGoogleLogin = async () => {
@@ -21,19 +31,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md bg-card/80 backdrop-blur-xl border-border p-8 rounded-3xl shadow-2xl overflow-hidden" showCloseButton>
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/10 blur-[100px] rounded-full pointer-events-none z-[-1]" />
 
-      <div className="w-full max-w-sm bg-card/80 backdrop-blur-xl border border-border rounded-3xl p-8 shadow-2xl relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+        <DialogHeader className="text-center mb-6">
+          <DialogTitle className="text-3xl font-bold text-foreground text-center">
             Welcome back
-          </h1>
-          <p className="text-muted-foreground text-sm">
+          </DialogTitle>
+          <DialogDescription className="text-muted-foreground text-sm text-center">
             Sign in to your Skilly account
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
 
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-xl mb-6 text-center">
@@ -72,19 +82,19 @@ export default function LoginPage() {
           </svg>
           Continue with Google
         </button>
-      </div>
 
-      <p className="text-muted-foreground text-sm mt-8">
-        By continuing, you agree to Skilly's{" "}
-        <Link href="#" className="underline hover:text-foreground">
-          Terms
-        </Link>{" "}
-        and{" "}
-        <Link href="#" className="underline hover:text-foreground">
-          Privacy Policy
-        </Link>
-        .
-      </p>
-    </div>
+        <p className="text-muted-foreground text-sm mt-8 text-center">
+          By continuing, you agree to Skilly's{" "}
+          <Link href="#" className="underline hover:text-foreground">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="#" className="underline hover:text-foreground">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -21,15 +21,20 @@ import {
 import { createClient } from "../../lib/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function Navbar({ onToggleMobileSidebar }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { requireAuth } = useAuthModal();
   const [user, setUser] = useState(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState({ professionals: [], jobs: [] });
+  const [searchResults, setSearchResults] = useState({
+    professionals: [],
+    jobs: [],
+  });
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchContainerRef = useRef(null);
@@ -50,7 +55,10 @@ export default function Navbar({ onToggleMobileSidebar }) {
   // Close search dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target)
+      ) {
         setShowSearchDropdown(false);
       }
     };
@@ -76,24 +84,24 @@ export default function Navbar({ onToggleMobileSidebar }) {
     setIsSearching(true);
     setShowSearchDropdown(true);
     const supabase = createClient();
-    
+
     // Search professionals
     const { data: profs } = await supabase
-      .from('professionals')
-      .select('user_id, full_name, profession, avatar_url')
-      .ilike('full_name', `%${query}%`)
+      .from("professionals")
+      .select("user_id, full_name, profession, avatar_url")
+      .ilike("full_name", `%${query}%`)
       .limit(3);
-      
+
     // Search jobs
     const { data: jobs } = await supabase
-      .from('jobs')
-      .select('id, title, location')
-      .ilike('title', `%${query}%`)
+      .from("jobs")
+      .select("id, title, location")
+      .ilike("title", `%${query}%`)
       .limit(3);
-      
-    setSearchResults({ 
-      professionals: profs || [], 
-      jobs: jobs || [] 
+
+    setSearchResults({
+      professionals: profs || [],
+      jobs: jobs || [],
     });
     setIsSearching(false);
   };
@@ -110,7 +118,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
     setUser(null);
     setPopoverOpen(false);
     toast.success("Signed out successfully");
-    router.push("/login");
+    router.push("/");
   };
 
   const getAvatarUrl = () => {
@@ -145,7 +153,10 @@ export default function Navbar({ onToggleMobileSidebar }) {
         </button>
 
         {/* Search Bar matching screenshot */}
-        <div className="relative w-full max-w-md hidden md:block" ref={searchContainerRef}>
+        <div
+          className="relative w-full max-w-md hidden md:block"
+          ref={searchContainerRef}
+        >
           <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -172,9 +183,11 @@ export default function Navbar({ onToggleMobileSidebar }) {
           </div>
 
           {/* Search Results Dropdown */}
-          {showSearchDropdown && (searchQuery.trim().length >= 2) && (
+          {showSearchDropdown && searchQuery.trim().length >= 2 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 max-h-[80vh] overflow-y-auto">
-              {!isSearching && searchResults.professionals.length === 0 && searchResults.jobs.length === 0 ? (
+              {!isSearching &&
+              searchResults.professionals.length === 0 &&
+              searchResults.jobs.length === 0 ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   No results found for "{searchQuery}"
                 </div>
@@ -186,8 +199,8 @@ export default function Navbar({ onToggleMobileSidebar }) {
                       <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">
                         Professionals
                       </div>
-                      {searchResults.professionals.map(prof => (
-                        <div 
+                      {searchResults.professionals.map((prof) => (
+                        <div
                           key={prof.user_id}
                           onClick={() => {
                             setShowSearchDropdown(false);
@@ -202,8 +215,12 @@ export default function Navbar({ onToggleMobileSidebar }) {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{prof.full_name}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">{prof.profession || "Professional"}</p>
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {prof.full_name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {prof.profession || "Professional"}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -216,8 +233,8 @@ export default function Navbar({ onToggleMobileSidebar }) {
                       <div className="px-3 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">
                         Jobs
                       </div>
-                      {searchResults.jobs.map(job => (
-                        <div 
+                      {searchResults.jobs.map((job) => (
+                        <div
                           key={job.id}
                           onClick={() => {
                             setShowSearchDropdown(false);
@@ -229,22 +246,26 @@ export default function Navbar({ onToggleMobileSidebar }) {
                             <Search className="w-4 h-4 text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{job.title}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">{job.location || "Remote"}</p>
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {job.title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {job.location || "Remote"}
+                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  
+
                   {/* View All */}
-                  <div 
-                    className="border-t border-border mt-1 pt-1 px-2"
-                  >
-                    <button 
+                  <div className="border-t border-border mt-1 pt-1 px-2">
+                    <button
                       onClick={() => {
                         setShowSearchDropdown(false);
-                        router.push(`/professionals?query=${encodeURIComponent(searchQuery.trim())}`);
+                        router.push(
+                          `/professionals?query=${encodeURIComponent(searchQuery.trim())}`,
+                        );
                       }}
                       className="w-full text-center text-xs font-medium text-primary py-2 hover:bg-primary/5 rounded-lg transition-colors"
                     >
@@ -261,7 +282,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
       {/* Right: Actions */}
       <div className="flex items-center gap-2.5 md:gap-3">
         {/* "+ Post a Job" Button matching screenshot */}
-        <Link href="/jobs/create">
+        <Link href="/jobs/create" onClick={(e) => requireAuth(e, undefined)}>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs px-3.5 py-2 h-9 rounded-xl shadow-sm shadow-primary/20 flex items-center gap-1.5 transition-all">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Post a Job</span>
@@ -321,44 +342,55 @@ export default function Navbar({ onToggleMobileSidebar }) {
               <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col py-1">
                 <div className="px-4 py-2 border-b border-border/60">
                   <p className="text-xs font-semibold text-foreground truncate">
-                    {user?.user_metadata?.full_name || "Elena Vance"}
+                    {user
+                      ? user.user_metadata?.full_name || "User"
+                      : "Guest User"}
                   </p>
                   <p className="text-[11px] text-muted-foreground truncate">
-                    {user?.email || "elena@vance.io"}
+                    {user ? user.email : "Not logged in"}
                   </p>
                 </div>
-                <Link
-                  href="/dashboard"
-                  onClick={() => setPopoverOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  Dashboard
-                </Link>
-                <Link
-                  href="/messages"
-                  onClick={() => setPopoverOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  Messages
-                </Link>
-                <Link
-                  href="/community"
-                  onClick={() => setPopoverOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-                >
-                  <Users2 className="w-3.5 h-3.5" />
-                  Community
-                </Link>
-                <div className="h-px w-full bg-border/60" />
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors text-left w-full"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Log Out
-                </button>
+                {user ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setPopoverOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                    >
+                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/messages"
+                      onClick={() => setPopoverOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      Messages
+                    </Link>
+                    <div className="h-px w-full bg-border/60" />
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors text-left w-full"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Log Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        setPopoverOpen(false);
+                        requireAuth(e, undefined);
+                      }}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors text-left w-full"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      Log In
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}

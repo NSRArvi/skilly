@@ -25,8 +25,10 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import Link from "next/link";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function JobsPage() {
+  const { requireAuth } = useAuthModal();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -135,7 +137,7 @@ export default function JobsPage() {
                 `${jobs.length} job${jobs.length !== 1 ? "s" : ""} found`}
             </p>
           </div>
-          <Link href="/jobs/create">
+          <Link href="/jobs/create" onClick={(e) => requireAuth(e, undefined)}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold h-10 px-5 rounded-xl text-sm flex items-center gap-2 shadow-sm shadow-primary/20">
               <Plus className="w-4 h-4" />
               Post a Job

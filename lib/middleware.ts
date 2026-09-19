@@ -48,14 +48,15 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  // Protect the /dashboard route (unauthenticated users go to /login)
+  // Protect the /dashboard route (unauthenticated users go to /?login=true)
   if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/";
+    url.searchParams.set("login", "true");
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from /login page
+  // Redirect authenticated users away from /login page (just in case they visit it)
   if (user && request.nextUrl.pathname.startsWith("/login")) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/professionals";

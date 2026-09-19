@@ -27,11 +27,7 @@ import {
   FaDiscord,
   FaGlobe,
 } from "react-icons/fa";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,7 +81,7 @@ export default function ProfessionalDetailsPage() {
 
       if (data && data.length > 0) {
         const prof = data[0];
-        
+
         // Fetch live counts directly from followers table
         const { count: followersCount } = await supabase
           .from("followers")
@@ -100,16 +96,17 @@ export default function ProfessionalDetailsPage() {
         setProfile({
           ...prof,
           followers_count: followersCount || 0,
-          following_count: followingCount || 0
+          following_count: followingCount || 0,
         });
         if (
           currentUserData &&
-          (currentUserData.id === prof.user_id || currentUserData.id === prof.id)
+          (currentUserData.id === prof.user_id ||
+            currentUserData.id === prof.id)
         ) {
           setIsOwner(true);
         }
         setCurrentUser(currentUserData);
-        
+
         if (currentUserData) {
           const { data: followData } = await supabase
             .from("followers")
@@ -131,14 +128,19 @@ export default function ProfessionalDetailsPage() {
       toast.error("You must be logged in to send an offer.");
       return;
     }
-    if (!hireTitle.trim() || !hireDescription.trim() || !hireAmount || !hireDate) {
+    if (
+      !hireTitle.trim() ||
+      !hireDescription.trim() ||
+      !hireAmount ||
+      !hireDate
+    ) {
       toast.error("Please fill in all fields.");
       return;
     }
 
     setSubmittingHire(true);
     const supabase = createClient();
-    
+
     const { error } = await supabase.from("orders").insert({
       client_id: currentUser.id,
       professional_id: profile.user_id,
@@ -152,7 +154,9 @@ export default function ProfessionalDetailsPage() {
     if (error) {
       toast.error("Failed to send offer: " + error.message);
     } else {
-      toast.success("Offer sent successfully! The professional will be notified.");
+      toast.success(
+        "Offer sent successfully! The professional will be notified.",
+      );
       setIsHireModalOpen(false);
       setHireTitle("");
       setHireDescription("");
@@ -167,38 +171,42 @@ export default function ProfessionalDetailsPage() {
       toast.error("You must be logged in to follow professionals.");
       return;
     }
-    
+
     setSubmittingFollow(true);
     const supabase = createClient();
-    
+
     if (isFollowing) {
       const { error } = await supabase
         .from("followers")
         .delete()
         .eq("follower_id", currentUser.id)
         .eq("following_id", profile.user_id);
-        
+
       if (!error) {
         setIsFollowing(false);
         const newCount = Math.max(0, (profile.followers_count || 0) - 1);
-        setProfile(prev => ({ ...prev, followers_count: newCount }));
+        setProfile((prev) => ({ ...prev, followers_count: newCount }));
         // Update count in professionals table
-        await supabase.from("professionals").update({ followers_count: newCount }).eq("user_id", profile.user_id);
+        await supabase
+          .from("professionals")
+          .update({ followers_count: newCount })
+          .eq("user_id", profile.user_id);
       }
     } else {
-      const { error } = await supabase
-        .from("followers")
-        .insert({
-          follower_id: currentUser.id,
-          following_id: profile.user_id
-        });
-        
+      const { error } = await supabase.from("followers").insert({
+        follower_id: currentUser.id,
+        following_id: profile.user_id,
+      });
+
       if (!error) {
         setIsFollowing(true);
         const newCount = (profile.followers_count || 0) + 1;
-        setProfile(prev => ({ ...prev, followers_count: newCount }));
+        setProfile((prev) => ({ ...prev, followers_count: newCount }));
         // Update count in professionals table
-        await supabase.from("professionals").update({ followers_count: newCount }).eq("user_id", profile.user_id);
+        await supabase
+          .from("professionals")
+          .update({ followers_count: newCount })
+          .eq("user_id", profile.user_id);
       }
     }
     setSubmittingFollow(false);
@@ -319,7 +327,7 @@ export default function ProfessionalDetailsPage() {
             onClick={() => router.push("/professionals")}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Professionals
+            Experts
           </Button>
 
           <div className="flex items-center gap-2.5">
@@ -330,7 +338,7 @@ export default function ProfessionalDetailsPage() {
               className="rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-white hover:bg-black/80 text-xs gap-1.5 shadow-lg"
             >
               <Share2 className="w-3.5 h-3.5" />
-              Share Profile
+              Share
             </Button>
 
             {isOwner ? (
@@ -340,7 +348,7 @@ export default function ProfessionalDetailsPage() {
                 className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs gap-1.5 shadow-lg shadow-primary/20"
               >
                 <Pencil className="w-3.5 h-3.5" />
-                Edit Profile
+                Edit
               </Button>
             ) : (
               <div className="flex gap-2">
@@ -349,7 +357,7 @@ export default function ProfessionalDetailsPage() {
                   variant={isFollowing ? "outline" : "default"}
                   onClick={handleToggleFollow}
                   disabled={submittingFollow}
-                  className={`rounded-xl font-bold text-xs shadow-lg px-4 ${isFollowing ? "bg-background/20 text-white border-white/20 hover:bg-background/40" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"}`}
+                  className={`rounded-xl font-bold text-xs shadow-lg px-4 ${isFollowing ? "bg-background/20 border-white/20 hover:bg-background/40" : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"}`}
                 >
                   {isFollowing ? "Unfollow" : "Follow"}
                 </Button>
@@ -358,7 +366,7 @@ export default function ProfessionalDetailsPage() {
                   onClick={() => setIsHireModalOpen(true)}
                   className="rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs shadow-lg shadow-primary/20 px-4"
                 >
-                  Hire Me
+                  Hire Now
                 </Button>
               </div>
             )}
@@ -368,7 +376,7 @@ export default function ProfessionalDetailsPage() {
 
       <Container className="relative">
         {/* Profile Identity Hero Card (matching exact UI design) */}
-        <div className="bg-card border border-border rounded-2xl -mt-16 md:-mt-20 p-6 md:p-8 mb-6 relative z-10 shadow-xl">
+        <div className="bg-card border border-border rounded-2xl -mt-16 md:-mt-20 p-6 md:p-8 mb-6 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5">
               {/* Avatar with Verification / Status Indicator */}
@@ -1014,14 +1022,19 @@ export default function ProfessionalDetailsPage() {
       <Dialog open={isHireModalOpen} onOpenChange={setIsHireModalOpen}>
         <DialogContent className="sm:max-w-[425px] bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-foreground">Send an Offer</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-foreground">
+              Send an Offer
+            </DialogTitle>
             <DialogDescription className="text-muted-foreground text-sm">
-              Propose a project to {profile.full_name}. They will review it and get back to you.
+              Propose a project to {profile.full_name}. They will review it and
+              get back to you.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">Project Title</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Project Title
+              </Label>
               <Input
                 value={hireTitle}
                 onChange={(e) => setHireTitle(e.target.value)}
@@ -1030,7 +1043,9 @@ export default function ProfessionalDetailsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-foreground">Description & Scope</Label>
+              <Label className="text-xs font-semibold text-foreground">
+                Description & Scope
+              </Label>
               <textarea
                 value={hireDescription}
                 onChange={(e) => setHireDescription(e.target.value)}
@@ -1041,7 +1056,9 @@ export default function ProfessionalDetailsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground">Offer Amount (BDT)</Label>
+                <Label className="text-xs font-semibold text-foreground">
+                  Offer Amount (BDT)
+                </Label>
                 <Input
                   type="number"
                   value={hireAmount}
@@ -1051,7 +1068,9 @@ export default function ProfessionalDetailsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-foreground">Delivery Date</Label>
+                <Label className="text-xs font-semibold text-foreground">
+                  Delivery Date
+                </Label>
                 <Input
                   type="date"
                   value={hireDate}

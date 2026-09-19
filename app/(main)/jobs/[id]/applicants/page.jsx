@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 const statusConfig = {
   pending: {
@@ -39,6 +40,7 @@ const statusConfig = {
 export default function JobApplicantsPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { openModal } = useAuthModal();
   const [job, setJob] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export default function JobApplicantsPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login");
+        openModal();
         return;
       }
 

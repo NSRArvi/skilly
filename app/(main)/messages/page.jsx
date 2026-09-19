@@ -20,11 +20,13 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get("user_id");
+  const { openModal } = useAuthModal();
 
   const [currentUser, setCurrentUser] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -53,7 +55,7 @@ function MessagesContent() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login");
+        openModal();
         return;
       }
       setCurrentUser(user);

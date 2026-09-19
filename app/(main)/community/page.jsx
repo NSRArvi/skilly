@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Loader2, Users2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function CommunityPage() {
   const router = useRouter();
+  const { requireAuth } = useAuthModal();
   const supabase = createClient();
   const [currentUser, setCurrentUser] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -90,21 +92,16 @@ export default function CommunityPage() {
       <Container className="max-w-4xl">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-              <Users2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                Community
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Share updates, ask questions, and connect.
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
+              Community
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Share updates, ask questions, and connect.
+            </p>
           </div>
 
-          <Link href="/community/create">
+          <Link href="/community/create" onClick={(e) => requireAuth(e, undefined)}>
             <Button className="font-bold gap-2 rounded-xl h-10 px-5 shadow-sm shadow-primary/20">
               <PlusCircle className="w-4 h-4" /> Create Post
             </Button>
@@ -153,7 +150,7 @@ export default function CommunityPage() {
                 ? "You haven't published any posts yet. Share your first thought!"
                 : "Be the first one to start a discussion in the community."}
             </p>
-            <Link href="/community/create">
+            <Link href="/community/create" onClick={(e) => requireAuth(e, undefined)}>
               <Button
                 variant="outline"
                 className="rounded-xl border-border/60 font-bold"
