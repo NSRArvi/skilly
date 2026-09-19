@@ -20,10 +20,6 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
   const supabase = createClient();
 
   useEffect(() => {
@@ -66,23 +62,34 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  return (
+    <AuthModalContext.Provider value={{ isOpen, openModal, closeModal, user, loading, requireAuth }}>
+      <React.Suspense fallback={null}>
+        <LoginQueryHandler onOpenModal={() => setIsOpen(true)} />
+      </React.Suspense>
+      {children}
+      <LoginModal isOpen={isOpen} onClose={closeModal} />
+    </AuthModalContext.Provider>
+  );
+}
+
+function LoginQueryHandler({ onOpenModal }: { onOpenModal: () => void }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   useEffect(() => {
-    if (searchParams.get("login") === "true") {
-      setIsOpen(true);
+    if (searchParams?.get("login") === "true") {
+      onOpenModal();
       // Remove the login query param from the URL to avoid reopening on refresh
       const newSearchParams = new URLSearchParams(searchParams.toString());
       newSearchParams.delete("login");
       const newUrl = pathname + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : "");
       router.replace(newUrl, { scroll: false });
     }
-  }, [searchParams, pathname, router]);
+  }, [searchParams, pathname, router, onOpenModal]);
 
-  return (
-    <AuthModalContext.Provider value={{ isOpen, openModal, closeModal, user, loading, requireAuth }}>
-      {children}
-      <LoginModal isOpen={isOpen} onClose={closeModal} />
-    </AuthModalContext.Provider>
-  );
+  return null;
 }
 
 export function useAuthModal() {
