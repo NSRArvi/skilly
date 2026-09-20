@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/client";
 import Container from "@/components/shared/Container";
 import PostCard from "@/components/community/PostCard";
@@ -12,7 +11,6 @@ import { toast } from "sonner";
 import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function CommunityPage() {
-  const router = useRouter();
   const { requireAuth } = useAuthModal();
   const supabase = createClient();
   const [currentUser, setCurrentUser] = useState(null);
@@ -101,7 +99,10 @@ export default function CommunityPage() {
             </p>
           </div>
 
-          <Link href="/community/create" onClick={(e) => requireAuth(e, undefined)}>
+          <Link
+            href="/community/create"
+            onClick={(e) => requireAuth(e, undefined)}
+          >
             <Button className="font-bold gap-2 rounded-xl h-10 px-5 shadow-sm shadow-primary/20">
               <PlusCircle className="w-4 h-4" /> Create Post
             </Button>
@@ -121,7 +122,7 @@ export default function CommunityPage() {
             Community Posts
           </button>
           <button
-            onClick={() => setActiveTab("activities")}
+            onClick={(e) => requireAuth(e, () => setActiveTab("activities"))}
             className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${
               activeTab === "activities"
                 ? "border-primary text-primary"
@@ -150,7 +151,10 @@ export default function CommunityPage() {
                 ? "You haven't published any posts yet. Share your first thought!"
                 : "Be the first one to start a discussion in the community."}
             </p>
-            <Link href="/community/create" onClick={(e) => requireAuth(e, undefined)}>
+            <Link
+              href="/community/create"
+              onClick={(e) => requireAuth(e, undefined)}
+            >
               <Button
                 variant="outline"
                 className="rounded-xl border-border/60 font-bold"

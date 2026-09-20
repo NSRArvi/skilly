@@ -426,7 +426,7 @@ export default function ProfessionalsAdmin() {
                         Hourly Rate
                       </span>
                       <span className="text-sm text-gray-900 font-medium flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-gray-400" />{" "}
+                        <span className="font-bold text-gray-400 mr-1 leading-none text-[10px]">৳</span>{" "}
                         {selectedUser.hourly_rate
                           ? selectedUser.hourly_rate
                           : "N/A"}
@@ -437,7 +437,7 @@ export default function ProfessionalsAdmin() {
                         Daily Rate
                       </span>
                       <span className="text-sm text-gray-900 font-medium flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-gray-400" />{" "}
+                        <span className="font-bold text-gray-400 mr-1 leading-none text-[10px]">৳</span>{" "}
                         {selectedUser.daily_rate
                           ? selectedUser.daily_rate
                           : "N/A"}

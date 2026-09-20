@@ -261,22 +261,22 @@ export default function ProfileTab({ onProfileUpdate }) {
   useEffect(() => {
     const fetchTaxonomy = async () => {
       const supabase = createClient();
-      
+
       const { data: catData } = await supabase
         .from("categories")
         .select("*")
         .order("name");
-      
+
       if (catData) setCategories(catData);
 
       const { data: subData } = await supabase
         .from("subcategories")
         .select("*")
         .order("name");
-      
+
       if (subData) setSubcategories(subData);
     };
-    
+
     fetchTaxonomy();
   }, []);
 
@@ -760,46 +760,52 @@ export default function ProfileTab({ onProfileUpdate }) {
                   <Label className="text-xs font-semibold text-foreground">
                     Category
                   </Label>
-                  <Select 
-                    value={selectedCategory} 
-                    onValueChange={(val) => { 
-                      setSelectedCategory(val); 
-                      setSelectedSubcategory(""); 
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={(val) => {
+                      setSelectedCategory(val);
+                      setSelectedSubcategory("");
                     }}
                   >
                     <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
                       <SelectValue placeholder="Select a category">
-                        {categories.find(c => c.id === selectedCategory)?.name || "Select a category"}
+                        {categories.find((c) => c.id === selectedCategory)
+                          ?.name || "Select a category"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
                       {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-foreground">
                     Subcategory
                   </Label>
-                  <Select 
-                    value={selectedSubcategory} 
-                    onValueChange={setSelectedSubcategory} 
+                  <Select
+                    value={selectedSubcategory}
+                    onValueChange={setSelectedSubcategory}
                     disabled={!selectedCategory}
                   >
                     <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
                       <SelectValue placeholder="Select a subcategory">
-                        {subcategories.find(s => s.id === selectedSubcategory)?.name || "Select a subcategory"}
+                        {subcategories.find((s) => s.id === selectedSubcategory)
+                          ?.name || "Select a subcategory"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
                       {subcategories
                         .filter((sub) => sub.category_id === selectedCategory)
                         .map((sub) => (
-                          <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
-                      ))}
+                          <SelectItem key={sub.id} value={sub.id}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -809,7 +815,7 @@ export default function ProfileTab({ onProfileUpdate }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-foreground">
-                    Hourly Rate ($)
+                    Hourly Rate (৳)
                   </Label>
                   <Input
                     type="number"
@@ -822,7 +828,7 @@ export default function ProfileTab({ onProfileUpdate }) {
 
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-foreground">
-                    Daily Rate ($)
+                    Daily Rate (৳)
                   </Label>
                   <Input
                     type="number"
@@ -952,7 +958,7 @@ export default function ProfileTab({ onProfileUpdate }) {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     State / Division
@@ -961,7 +967,10 @@ export default function ProfileTab({ onProfileUpdate }) {
                     value={presentAddress.stateCode}
                     disabled={!presentAddress.countryCode}
                     onValueChange={(val) => {
-                      const stateData = State.getStateByCodeAndCountry(val, presentAddress.countryCode);
+                      const stateData = State.getStateByCodeAndCountry(
+                        val,
+                        presentAddress.countryCode,
+                      );
                       setPresentAddress({
                         ...presentAddress,
                         stateCode: val,
@@ -976,15 +985,17 @@ export default function ProfileTab({ onProfileUpdate }) {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      {State.getStatesOfCountry(presentAddress.countryCode).map((s) => (
-                        <SelectItem key={s.isoCode} value={s.isoCode}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
+                      {State.getStatesOfCountry(presentAddress.countryCode).map(
+                        (s) => (
+                          <SelectItem key={s.isoCode} value={s.isoCode}>
+                            {s.name}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     City
@@ -1005,7 +1016,10 @@ export default function ProfileTab({ onProfileUpdate }) {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      {City.getCitiesOfState(presentAddress.countryCode, presentAddress.stateCode).map((c) => (
+                      {City.getCitiesOfState(
+                        presentAddress.countryCode,
+                        presentAddress.stateCode,
+                      ).map((c) => (
                         <SelectItem key={c.name} value={c.name}>
                           {c.name}
                         </SelectItem>
@@ -1086,7 +1100,7 @@ export default function ProfileTab({ onProfileUpdate }) {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     State / Division
@@ -1095,7 +1109,10 @@ export default function ProfileTab({ onProfileUpdate }) {
                     value={permanentAddress.stateCode}
                     disabled={!permanentAddress.countryCode}
                     onValueChange={(val) => {
-                      const stateData = State.getStateByCodeAndCountry(val, permanentAddress.countryCode);
+                      const stateData = State.getStateByCodeAndCountry(
+                        val,
+                        permanentAddress.countryCode,
+                      );
                       setPermanentAddress({
                         ...permanentAddress,
                         stateCode: val,
@@ -1110,7 +1127,9 @@ export default function ProfileTab({ onProfileUpdate }) {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      {State.getStatesOfCountry(permanentAddress.countryCode).map((s) => (
+                      {State.getStatesOfCountry(
+                        permanentAddress.countryCode,
+                      ).map((s) => (
                         <SelectItem key={s.isoCode} value={s.isoCode}>
                           {s.name}
                         </SelectItem>
@@ -1118,7 +1137,7 @@ export default function ProfileTab({ onProfileUpdate }) {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
                     City
@@ -1139,7 +1158,10 @@ export default function ProfileTab({ onProfileUpdate }) {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      {City.getCitiesOfState(permanentAddress.countryCode, permanentAddress.stateCode).map((c) => (
+                      {City.getCitiesOfState(
+                        permanentAddress.countryCode,
+                        permanentAddress.stateCode,
+                      ).map((c) => (
                         <SelectItem key={c.name} value={c.name}>
                           {c.name}
                         </SelectItem>

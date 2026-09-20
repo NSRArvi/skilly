@@ -14,8 +14,16 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { createClient } from "../../../../lib/client";
+import { incrementProfessionalOrderCount } from "../../../../lib/actions/orders";
 import { toast } from "sonner";
 import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const statusConfig = {
   pending: {
@@ -48,10 +56,12 @@ export default function DashboardOrdersTab({ userId }) {
   const [view, setView] = useState("received"); // 'received' or 'placed'
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingTask, setUpdatingTask] = useState(null);
+  const [updatingAction, setUpdatingAction] = useState(null);
 
   const fetchOrders = async () => {
     if (!userId) return;
-    setLoading(true);
+    if (orders.length === 0) setLoading(true);
     const supabase = createClient();
 
     let query = supabase
@@ -108,6 +118,7 @@ export default function DashboardOrdersTab({ userId }) {
   }, [userId, view]);
 
   const handleAction = async (orderId, newStatus, otherUserId) => {
+    setUpdatingAction(orderId);
     const supabase = createClient();
     const { error } = await supabase
       .from("orders")
@@ -116,6 +127,7 @@ export default function DashboardOrdersTab({ userId }) {
 
     if (error) {
       toast.error(`Failed to ${newStatus} order`);
+      setUpdatingAction(null);
       return;
     }
 
@@ -129,8 +141,7 @@ export default function DashboardOrdersTab({ userId }) {
         .insert({
           follower_id: userId,
           following_id: otherUserId,
-        })
-        .catch((e) => {}); // Ignore unique constraint errors
+        }); // Errors ignored silently if they already follow
 
       // Client follows professional
       await supabase
@@ -138,10 +149,44 @@ export default function DashboardOrdersTab({ userId }) {
         .insert({
           follower_id: otherUserId,
           following_id: userId,
-        })
-        .catch((e) => {});
+        });
     }
 
+    await fetchOrders();
+    setUpdatingAction(null);
+  };
+
+  const handleTaskStatusChange = async (order, newStatus) => {
+    const currentStatus = order.task_status || "discussing";
+    if (newStatus === currentStatus) return;
+    
+    setUpdatingTask(order.id);
+    const supabase = createClient();
+    
+    // 1. Update order task_status
+    const { error } = await supabase
+      .from("orders")
+      .update({ task_status: newStatus })
+      .eq("id", order.id);
+
+    if (error) {
+      toast.error(`Failed to update task status`);
+      setUpdatingTask(null);
+      return;
+    }
+
+    // 2. If marked as success (and wasn't previously success), increment professional's orders_count
+    if (newStatus === "success" && currentStatus !== "success") {
+      const result = await incrementProfessionalOrderCount(order.professional_id);
+      
+      if (!result.success) {
+        console.error("Failed to increment orders_count:", result.error);
+        // We still continue since the order status updated, but we might want to log it.
+      }
+    }
+
+    toast.success("Task status updated");
+    setUpdatingTask(null);
     fetchOrders();
   };
 
@@ -157,7 +202,7 @@ export default function DashboardOrdersTab({ userId }) {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Received Offers
+          Received Orders
         </button>
         <button
           onClick={() => setView("placed")}
@@ -167,7 +212,7 @@ export default function DashboardOrdersTab({ userId }) {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Placed Offers
+          Placed Orders
         </button>
       </div>
 
@@ -253,6 +298,18 @@ export default function DashboardOrdersTab({ userId }) {
                           {new Date(order.delivery_date).toLocaleDateString()}
                         </span>
                       )}
+                      
+                      {/* Task Status Badge */}
+                      {canChat && (
+                        <Badge variant="outline" className={`text-[10px] capitalize ${
+                          (order.task_status || 'discussing') === 'success' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                          (order.task_status || 'discussing') === 'aborted' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                          (order.task_status || 'discussing') === 'progressing' ? 'bg-blue-500/10 text-blue-600 border-blue-500/30' :
+                          'bg-muted text-muted-foreground border-border'
+                        }`}>
+                          Task: {order.task_status || 'discussing'}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
@@ -262,6 +319,7 @@ export default function DashboardOrdersTab({ userId }) {
                       <>
                         <Button
                           size="sm"
+                          disabled={updatingAction === order.id}
                           onClick={() =>
                             handleAction(
                               order.id,
@@ -271,11 +329,16 @@ export default function DashboardOrdersTab({ userId }) {
                           }
                           className="h-8 rounded-lg text-[11px] font-bold gap-1 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-500/30"
                         >
-                          <CheckCircle className="w-3.5 h-3.5" />
+                          {updatingAction === order.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-3.5 h-3.5" />
+                          )}
                           Accept Offer
                         </Button>
                         <Button
                           size="sm"
+                          disabled={updatingAction === order.id}
                           onClick={() =>
                             handleAction(order.id, "declined", order.client_id)
                           }
@@ -299,6 +362,28 @@ export default function DashboardOrdersTab({ userId }) {
                           Message
                         </Button>
                       </Link>
+                    )}
+                    
+                    {/* Task Status Updater for Placed Orders */}
+                    {view === "placed" && canChat && (
+                      <Select
+                        value={order.task_status || "discussing"}
+                        onValueChange={(val) => handleTaskStatusChange(order, val)}
+                        disabled={updatingTask === order.id}
+                      >
+                        <SelectTrigger className="h-8 text-[11px] w-[130px] font-bold bg-muted/50 border-border">
+                          {updatingTask === order.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                          ) : null}
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="discussing" className="text-xs font-semibold">Discussing</SelectItem>
+                          <SelectItem value="progressing" className="text-xs font-semibold">Progressing</SelectItem>
+                          <SelectItem value="success" className="text-xs font-semibold text-emerald-600">Success</SelectItem>
+                          <SelectItem value="aborted" className="text-xs font-semibold text-red-600">Aborted</SelectItem>
+                        </SelectContent>
+                      </Select>
                     )}
                   </div>
                 </div>

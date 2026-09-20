@@ -186,8 +186,8 @@ export default function OrdersAdmin() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900 flex items-center gap-1">
-                        {order.currency === "USD" ? (
-                          <DollarSign className="w-4 h-4 text-gray-400" />
+                        {order.currency === "BDT" ? (
+                          <span className="font-bold text-gray-400 mr-1 text-sm leading-none">৳</span>
                         ) : (
                           <span className="text-gray-400 text-xs font-semibold mr-1">
                             {order.currency}
@@ -254,8 +254,8 @@ export default function OrdersAdmin() {
                     <div>
                       <p className="text-sm text-gray-500">Amount</p>
                       <p className="font-bold text-xl text-gray-900">
-                        {selectedOrder.currency === "USD"
-                          ? "$"
+                        {selectedOrder.currency === "BDT"
+                          ? "৳"
                           : `${selectedOrder.currency} `}
                         {selectedOrder.offer_amount?.toLocaleString() || "0"}
                       </p>

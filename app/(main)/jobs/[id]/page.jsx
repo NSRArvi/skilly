@@ -10,7 +10,6 @@ import {
   Briefcase,
   MapPin,
   Clock,
-  DollarSign,
   Building2,
   CheckCircle2,
   Calendar,
@@ -375,7 +374,7 @@ export default function JobDetailsPage() {
             {/* Salary Card */}
             <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
               <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
+                <span className="font-bold text-primary text-lg leading-none">৳</span>
                 Compensation
               </h3>
               <div>

@@ -434,7 +434,7 @@ export default function CreateJobPage() {
             {/* Compensation */}
             <div className={sectionClass}>
               <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-primary" />
+                <span className="font-bold text-primary text-lg leading-none">৳</span>
                 Compensation
               </h2>
               <div className="space-y-4">

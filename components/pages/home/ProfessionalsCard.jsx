@@ -12,7 +12,9 @@ import {
 export default function ProfessionalsCard({ professional }) {
   const address = professional.present_address || {};
   const location = [address.city, address.country].filter(Boolean).join(", ");
-  const isVerified = Boolean(professional.is_verified ?? professional.is_verify);
+  const isVerified = Boolean(
+    professional.is_verified ?? professional.is_verify,
+  );
 
   return (
     <Link
@@ -47,7 +49,10 @@ export default function ProfessionalsCard({ professional }) {
               )}
             </h3>
             <p className="text-muted-foreground text-sm truncate">
-              {professional.subcategories?.name || professional.categories?.name || professional.profession || "Independent Professional"}
+              {professional.subcategories?.name ||
+                professional.categories?.name ||
+                professional.profession ||
+                "Independent Professional"}
             </p>
             {professional.ratings_count > 0 && (
               <div className="flex items-center gap-1 mt-1">
@@ -113,7 +118,7 @@ export default function ProfessionalsCard({ professional }) {
             ) : (
               <div className="flex items-baseline gap-1">
                 <span className="text-foreground font-bold text-lg">
-                  ${professional.hourly_rate || professional.daily_rate}
+                  ৳{professional.hourly_rate || professional.daily_rate}
                 </span>
                 <span className="text-muted-foreground text-[13px] font-medium">
                   {professional.hourly_rate ? "/ hr" : "/ day"}

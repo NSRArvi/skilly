@@ -520,7 +520,7 @@ export default function ProfessionalDetailsPage() {
               <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
                 Rate:{" "}
                 <span className="text-primary font-bold">
-                  ${profile.hourly_rate}/hr
+                  ৳{profile.hourly_rate}/hr
                 </span>
               </span>
             )}
@@ -528,7 +528,7 @@ export default function ProfessionalDetailsPage() {
               <span className="whitespace-nowrap flex-shrink-0 px-3.5 py-1.5 rounded-xl bg-card border border-border text-muted-foreground flex items-center gap-1.5">
                 Daily:{" "}
                 <span className="text-primary font-bold">
-                  ${profile.daily_rate}/day
+                  ৳{profile.daily_rate}/day
                 </span>
               </span>
             )}
@@ -787,7 +787,7 @@ export default function ProfessionalDetailsPage() {
                   </p>
                   <p className="text-lg font-extrabold text-foreground mt-0.5">
                     {profile.hourly_rate
-                      ? `$${profile.hourly_rate}`
+                      ? `৳${profile.hourly_rate}`
                       : "Negotiable"}
                     {profile.hourly_rate && (
                       <span className="text-xs font-normal text-muted-foreground">
@@ -803,7 +803,7 @@ export default function ProfessionalDetailsPage() {
                   </p>
                   <p className="text-lg font-extrabold text-foreground mt-0.5">
                     {profile.daily_rate
-                      ? `$${profile.daily_rate}`
+                      ? `৳${profile.daily_rate}`
                       : "Negotiable"}
                     {profile.daily_rate && (
                       <span className="text-xs font-normal text-muted-foreground">

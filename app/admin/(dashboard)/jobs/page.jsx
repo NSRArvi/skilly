@@ -206,7 +206,7 @@ export default function JobsAdmin() {
                 <div className="text-xs text-gray-500 space-y-2">
                   <div className="flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-gray-400" /> {job.city || job.country || job.location_type || "Remote"}</div>
                   <div className="flex items-center gap-2"><Briefcase className="w-3.5 h-3.5 text-gray-400" /> <span className="capitalize">{job.job_type?.replace("-", " ") || "Full Time"}</span></div>
-                  <div className="flex items-center gap-2"><DollarSign className="w-3.5 h-3.5 text-gray-400" /> {job.salary_min ? `${job.salary_min} - ${job.salary_max} ${job.salary_currency}/${job.salary_period}` : "Negotiable"}</div>
+                  <div className="flex items-center gap-2"><span className="font-bold text-gray-400 leading-none">৳</span> {job.salary_min ? `${job.salary_min} - ${job.salary_max} ${job.salary_currency}/${job.salary_period}` : "Negotiable"}</div>
                 </div>
                 
                 <div className="flex flex-wrap gap-2 pt-2">
@@ -253,7 +253,7 @@ export default function JobsAdmin() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-gray-900 flex items-center gap-1"><MapPin className="w-3 h-3 text-gray-400" /> {job.city || job.location_type || "Remote"}</div>
-                      <div className="text-xs text-gray-500 flex items-center gap-1 mt-1"><DollarSign className="w-3 h-3 text-gray-400" /> {job.salary_min ? `${job.salary_min}-${job.salary_max}` : "N/A"}</div>
+                      <div className="text-xs text-gray-500 flex items-center gap-1 mt-1"><span className="font-bold text-gray-400 leading-none">৳</span> {job.salary_min ? `${job.salary_min}-${job.salary_max}` : "N/A"}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-gray-900 capitalize">{job.status}</div>
@@ -377,7 +377,7 @@ export default function JobsAdmin() {
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">Salary & Hours</h4>
                     <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                       <div>
-                        <span className="flex items-center gap-1 text-xs font-semibold text-gray-500 mb-1"><DollarSign className="w-3.5 h-3.5" /> Salary Range</span>
+                        <span className="flex items-center gap-1 text-xs font-semibold text-gray-500 mb-1"><span className="font-bold leading-none">৳</span> Salary Range</span>
                         <div className="text-sm font-bold text-gray-900">
                           {selectedJob.salary_min ? `${selectedJob.salary_min} - ${selectedJob.salary_max} ${selectedJob.salary_currency}` : "Negotiable"} <span className="text-gray-500 font-normal capitalize">/ {selectedJob.salary_period}</span>
                         </div>
