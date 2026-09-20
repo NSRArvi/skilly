@@ -18,8 +18,8 @@ const tabs = [
   { name: "Jobs", href: "/admin/jobs", icon: Briefcase },
   { name: "Posts", href: "/admin/community_posts", icon: MessageSquare },
   { name: "Categories", href: "/admin/categories", icon: Tag },
-  { name: "Support", href: "/admin/support_messages", icon: LifeBuoy },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { name: "Support", href: "/admin/support_messages", icon: LifeBuoy },
 ];
 
 export default function AdminSidebar() {

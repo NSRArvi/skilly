@@ -180,3 +180,46 @@ export async function getJobApplicationsForAdmin(jobId) {
 
   return { success: true, data: enrichedApps };
 }
+
+// Categories Admin Actions
+export async function createCategory(data) {
+  const supabase = getAdminSupabase();
+  const { data: result, error } = await supabase.from("categories").insert([data]).select().single();
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: result };
+}
+
+export async function updateCategory(id, data) {
+  const supabase = getAdminSupabase();
+  const { error } = await supabase.from("categories").update(data).eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function deleteCategoryAction(id) {
+  const supabase = getAdminSupabase();
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function createSubcategory(data) {
+  const supabase = getAdminSupabase();
+  const { data: result, error } = await supabase.from("subcategories").insert([data]).select().single();
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: result };
+}
+
+export async function updateSubcategory(id, data) {
+  const supabase = getAdminSupabase();
+  const { error } = await supabase.from("subcategories").update(data).eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function deleteSubcategoryAction(id) {
+  const supabase = getAdminSupabase();
+  const { error } = await supabase.from("subcategories").delete().eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}

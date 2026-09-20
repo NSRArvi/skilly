@@ -2,10 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/client";
+import { 
+  createCategory, updateCategory, deleteCategoryAction, 
+  createSubcategory, updateSubcategory, deleteSubcategoryAction 
+} from "@/app/admin/actions";
 import { Search, Plus, Edit2, Trash2, Tag, X, Loader2, ListTree } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { AdminTableSkeleton } from "@/components/shared/AdminSkeletons";
+
+const generateSlug = (text) => {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
 
 export default function CategoriesAdmin() {
   const [categories, setCategories] = useState([]);
@@ -70,9 +78,9 @@ export default function CategoriesAdmin() {
 
   const deleteCategory = async (id) => {
     if (!window.confirm("Are you sure? This will also delete all related subcategories!")) return;
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
+    const result = await deleteCategoryAction(id);
+    if (!result.success) {
+      toast.error(result.error);
     } else {
       toast.success("Category deleted");
       setCategories((prev) => prev.filter((c) => c.id !== id));
@@ -84,19 +92,19 @@ export default function CategoriesAdmin() {
     e.preventDefault();
     setSaving(true);
     if (editingCategory) {
-      const { error } = await supabase.from("categories").update(categoryForm).eq("id", editingCategory.id);
-      if (error) toast.error(error.message);
+      const result = await updateCategory(editingCategory.id, categoryForm);
+      if (!result.success) toast.error(result.error);
       else {
         toast.success("Category updated");
         setCategories((prev) => prev.map((c) => c.id === editingCategory.id ? { ...c, ...categoryForm } : c));
         setIsCategoryModalOpen(false);
       }
     } else {
-      const { data, error } = await supabase.from("categories").insert([categoryForm]).select().single();
-      if (error) toast.error(error.message);
+      const result = await createCategory(categoryForm);
+      if (!result.success) toast.error(result.error);
       else {
         toast.success("Category added");
-        setCategories((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+        setCategories((prev) => [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name)));
         setIsCategoryModalOpen(false);
       }
     }
@@ -118,9 +126,9 @@ export default function CategoriesAdmin() {
 
   const deleteSubcategory = async (id) => {
     if (!window.confirm("Are you sure you want to delete this subcategory?")) return;
-    const { error } = await supabase.from("subcategories").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
+    const result = await deleteSubcategoryAction(id);
+    if (!result.success) {
+      toast.error(result.error);
     } else {
       toast.success("Subcategory deleted");
       setSubcategories((prev) => prev.filter((s) => s.id !== id));
@@ -132,19 +140,19 @@ export default function CategoriesAdmin() {
     e.preventDefault();
     setSaving(true);
     if (editingSub) {
-      const { error } = await supabase.from("subcategories").update(subForm).eq("id", editingSub.id);
-      if (error) toast.error(error.message);
+      const result = await updateSubcategory(editingSub.id, subForm);
+      if (!result.success) toast.error(result.error);
       else {
         toast.success("Subcategory updated");
         setSubcategories((prev) => prev.map((s) => s.id === editingSub.id ? { ...s, ...subForm } : s));
         setIsSubModalOpen(false);
       }
     } else {
-      const { data, error } = await supabase.from("subcategories").insert([subForm]).select().single();
-      if (error) toast.error(error.message);
+      const result = await createSubcategory(subForm);
+      if (!result.success) toast.error(result.error);
       else {
         toast.success("Subcategory added");
-        setSubcategories((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+        setSubcategories((prev) => [...prev, result.data].sort((a, b) => a.name.localeCompare(b.name)));
         setIsSubModalOpen(false);
       }
     }
@@ -284,7 +292,7 @@ export default function CategoriesAdmin() {
               <div className="p-6 space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Category Name</label>
-                  <Input required value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })} placeholder="e.g. Web Development" className="text-black" />
+                  <Input required value={categoryForm.name} onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value, slug: generateSlug(e.target.value) })} placeholder="e.g. Web Development" className="text-black" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">URL Slug</label>
@@ -324,7 +332,7 @@ export default function CategoriesAdmin() {
               <div className="p-6 space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">Subcategory Name</label>
-                  <Input required value={subForm.name} onChange={(e) => setSubForm({ ...subForm, name: e.target.value })} placeholder="e.g. React.js" className="text-black" />
+                  <Input required value={subForm.name} onChange={(e) => setSubForm({ ...subForm, name: e.target.value, slug: generateSlug(e.target.value) })} placeholder="e.g. React.js" className="text-black" />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-sm font-semibold text-gray-700">URL Slug</label>

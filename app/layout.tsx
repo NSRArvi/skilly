@@ -21,7 +21,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Skilly | Hire & Connect with Top Professionals",
-  description: "Create your professional profile, connect via in-app chat, and hire experts for your specific needs on demand.",
+  description:
+    "Create your professional profile, connect via in-app chat, and hire experts for your specific needs on demand.",
 };
 
 export default function RootLayout({
@@ -35,11 +36,16 @@ export default function RootLayout({
       className={`${jakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className={`${jakartaSans.className} font-sans min-h-full flex flex-col`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AuthModalProvider>
-            {children}
-          </AuthModalProvider>
+      <body
+        className={`${jakartaSans.className} font-sans min-h-full flex flex-col`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthModalProvider>{children}</AuthModalProvider>
           <Toaster richColors position="top-center" closeButton />
         </ThemeProvider>
       </body>

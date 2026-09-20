@@ -259,11 +259,11 @@ function MessagesContent() {
     <div className="h-[calc(100dvh-64px)] w-full bg-background flex overflow-hidden">
       {/* Sidebar - Conversation List */}
       <div
-        className={`${activeConversationId ? "hidden md:flex" : "flex"} w-full md:w-[320px] lg:w-[380px] flex-col border-r border-border/60 bg-card/40 backdrop-blur-md z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
+        className={`${activeConversationId ? "hidden lg:flex" : "flex"} w-full lg:w-[320px] lg:w-[380px] flex-col border-r border-border/60 bg-card/40 backdrop-blur-md z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
       >
-        <div className="p-4 md:p-5 border-b border-border/50 flex flex-col gap-4">
+        <div className="p-4 lg:p-5 border-b border-border/50 flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight flex items-center gap-2">
               Messages
             </h2>
             <Button
@@ -301,7 +301,7 @@ function MessagesContent() {
               <div
                 key={conv.id}
                 onClick={() => setActiveConversationId(conv.id)}
-                className={`flex items-center gap-4 px-4 md:px-5 py-3.5 mx-2 md:mx-3 rounded-2xl cursor-pointer transition-all duration-200 ${
+                className={`flex items-center gap-4 px-4 lg:px-5 py-3.5 mx-2 lg:mx-3 rounded-2xl cursor-pointer transition-all duration-200 ${
                   activeConversationId === conv.id
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[0.98]"
                     : "hover:bg-muted/60 text-foreground hover:scale-[0.99]"
@@ -358,7 +358,7 @@ function MessagesContent() {
 
       {/* Main Area - Active Chat */}
       <div
-        className={`${!activeConversationId ? "hidden md:flex" : "flex"} flex-1 flex-col relative bg-background`}
+        className={`${!activeConversationId ? "hidden lg:flex" : "flex"} flex-col bg-background fixed inset-0 z-[100] h-[100dvh] w-full lg:relative lg:inset-auto lg:z-auto lg:h-auto lg:flex-1`}
       >
         {/* Abstract Background pattern for chat */}
         <div
@@ -373,11 +373,11 @@ function MessagesContent() {
         {activeConversation ? (
           <>
             {/* Chat Header */}
-            <div className="h-16 px-4 md:px-6 border-b border-border/50 flex items-center justify-between bg-card/60 backdrop-blur-lg z-10 sticky top-0 shadow-sm">
+            <div className="h-16 px-4 lg:px-6 border-b border-border/50 flex items-center justify-between bg-card/60 backdrop-blur-lg z-10 sticky top-0 shadow-sm">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setActiveConversationId(null)}
-                  className="md:hidden p-2 -ml-2 rounded-xl hover:bg-muted text-muted-foreground transition-colors"
+                  className="lg:hidden p-2 -ml-2 rounded-xl hover:bg-muted text-muted-foreground transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
@@ -431,7 +431,7 @@ function MessagesContent() {
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 z-10 relative scrollbar-hide">
+            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 z-10 relative scrollbar-hide">
               {messages.length === 0 ? (
                 <div className="flex flex-col justify-center items-center h-full text-center">
                   <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mb-4">
@@ -466,7 +466,7 @@ function MessagesContent() {
                       className={`flex w-full ${isMine ? "justify-end" : "justify-start"} group`}
                     >
                       <div
-                        className={`flex items-end gap-2 max-w-[85%] md:max-w-[70%]`}
+                        className={`flex items-end gap-2 max-w-[85%] lg:max-w-[70%]`}
                       >
                         {!isMine && (
                           <div className="w-7 h-7 flex-shrink-0 hidden sm:block">
