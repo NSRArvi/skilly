@@ -90,6 +90,7 @@ export default function ProfileTab({ onProfileUpdate }) {
     zipcode: "",
     fullAddress: "",
   });
+  const [isSameAddress, setIsSameAddress] = useState(false);
 
   // 3. Skills & Categories States
   const [skills, setSkills] = useState([]);
@@ -629,7 +630,7 @@ export default function ProfileTab({ onProfileUpdate }) {
       rating_message: bioTagline,
       bio: aboutText,
       present_address: updatedPresentAddress,
-      permanent_address: permanentAddress,
+      permanent_address: isSameAddress ? presentAddress : permanentAddress,
       skills: skills,
       skills_for: skillsFor,
       languages: languages,
@@ -1064,9 +1065,22 @@ export default function ProfileTab({ onProfileUpdate }) {
 
             {/* Permanent Address */}
             <div className="space-y-4 pt-2 border-t border-border/60">
-              <h3 className="text-sm font-bold text-foreground border-b border-border/70 pb-2 flex items-center gap-2">
-                Permanent Address
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/70 pb-2 gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  Permanent Address
+                </h3>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isSameAddress}
+                    onChange={(e) => setIsSameAddress(e.target.checked)}
+                    className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5"
+                  />
+                  Same as Present Address
+                </label>
+              </div>
+              
+              {!isSameAddress && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold text-muted-foreground">
@@ -1202,6 +1216,7 @@ export default function ProfileTab({ onProfileUpdate }) {
                   />
                 </div>
               </div>
+              )}
             </div>
           </div>
 

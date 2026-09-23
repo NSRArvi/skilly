@@ -107,6 +107,21 @@ export default function Dashboard() {
               ? `${profData.present_address.city}, ${profData.present_address.country}`
               : profData.present_address?.country || "Location not set";
 
+          let completion = 0;
+          if (profData.full_name) completion += 15;
+          if (profData.profession) completion += 15;
+          if (profData.bio || profData.rating_message) completion += 20;
+          if (profData.avatar_url) completion += 20;
+          if (profData.cover_image_url) completion += 10;
+          if (
+            profData.present_address?.city ||
+            profData.present_address?.country ||
+            profData.present_address?.fullAddress
+          ) {
+            completion += 20;
+          }
+          if (completion > 100) completion = 100;
+
           setUserProfile({
             id: user.id,
             profileId: profData.id,
@@ -128,6 +143,7 @@ export default function Dashboard() {
               "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2070",
             joinedDate: joinedStr,
             location: locationStr,
+            completionPercentage: completion,
           });
         } else {
           setUserProfile((prev) => ({
@@ -460,7 +476,7 @@ export default function Dashboard() {
               <span>
                 Profile Completion:{" "}
                 <span className="text-primary font-bold">
-                  {userProfile.status ? "100%" : "85%"}
+                  {userProfile.completionPercentage ?? 0}%
                 </span>
               </span>
             </div>

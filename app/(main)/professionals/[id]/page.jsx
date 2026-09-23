@@ -973,7 +973,7 @@ export default function ProfessionalDetailsPage() {
             </div>
 
             {/* Card 4: Location & Address Details */}
-            {profile.present_address?.fullAddress && (
+            {(profile.present_address?.country || profile.present_address?.fullAddress) && (
               <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
                 <h3 className="font-bold text-foreground text-base tracking-tight flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-primary" />
@@ -985,31 +985,62 @@ export default function ProfessionalDetailsPage() {
                     <p className="font-semibold text-foreground">
                       Present Location
                     </p>
-                    <p>{profile.present_address.fullAddress}</p>
-                    <p>
-                      {profile.present_address.city},{" "}
-                      {profile.present_address.state}{" "}
-                      {profile.present_address.zipcode}
-                    </p>
-                    <p className="font-medium text-foreground">
-                      {profile.present_address.country}
-                    </p>
+                    {profile.present_address.fullAddress && (
+                      <p>{profile.present_address.fullAddress}</p>
+                    )}
+                    {[
+                      profile.present_address.city,
+                      profile.present_address.state,
+                      profile.present_address.zipcode,
+                    ].filter(Boolean).length > 0 && (
+                      <p>
+                        {[
+                          profile.present_address.city,
+                          profile.present_address.state,
+                          profile.present_address.zipcode,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </p>
+                    )}
+                    {profile.present_address.country && (
+                      <p className="font-medium text-foreground">
+                        {profile.present_address.country}
+                      </p>
+                    )}
                   </div>
 
-                  {profile.permanent_address?.fullAddress && (
+                  {profile.permanent_address &&
+                    Object.values(profile.permanent_address).some(
+                      (val) => val && String(val).trim() !== ""
+                    ) && (
                     <div className="pt-2 border-t border-border/40">
                       <p className="font-semibold text-foreground">
                         Permanent Location
                       </p>
-                      <p>{profile.permanent_address.fullAddress}</p>
-                      <p>
-                        {profile.permanent_address.city},{" "}
-                        {profile.permanent_address.state}{" "}
-                        {profile.permanent_address.zipcode}
-                      </p>
-                      <p className="font-medium text-foreground">
-                        {profile.permanent_address.country}
-                      </p>
+                      {profile.permanent_address.fullAddress && (
+                        <p>{profile.permanent_address.fullAddress}</p>
+                      )}
+                      {[
+                        profile.permanent_address.city,
+                        profile.permanent_address.state,
+                        profile.permanent_address.zipcode,
+                      ].filter(Boolean).length > 0 && (
+                        <p>
+                          {[
+                            profile.permanent_address.city,
+                            profile.permanent_address.state,
+                            profile.permanent_address.zipcode,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      )}
+                      {profile.permanent_address.country && (
+                        <p className="font-medium text-foreground">
+                          {profile.permanent_address.country}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
