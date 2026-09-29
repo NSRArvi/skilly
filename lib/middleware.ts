@@ -12,10 +12,7 @@ export async function updateSession(request: NextRequest) {
   let user: any = null;
 
   if (!url || !key) {
-    const hasSession = request.cookies.get("skilly_session")?.value === "active";
-    if (hasSession) {
-      user = { id: "user-demo-1", email: "alex.sterling@example.com" };
-    }
+    // Missing env vars, user remains null
   } else {
     try {
       const supabase = createServerClient(url, key, {
@@ -40,20 +37,16 @@ export async function updateSession(request: NextRequest) {
       const { data } = await supabase.auth.getUser();
       user = data?.user || null;
     } catch {
-      // Gracefully fall back
-      const hasSession = request.cookies.get("skilly_session")?.value === "active";
-      if (hasSession) {
-        user = { id: "user-demo-1", email: "alex.sterling@example.com" };
-      }
+      // Gracefully fall back, user remains null
     }
   }
 
   // Protect the /dashboard route (unauthenticated users go to /?login=true)
   if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.searchParams.set("login", "true");
-    return NextResponse.redirect(url);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.searchParams.set("login", "true");
+    return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect authenticated users away from /login page (just in case they visit it)
@@ -61,6 +54,15 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/professionals";
     return NextResponse.redirect(redirectUrl);
+  }
+  
+  // Admin route protection
+  if (request.nextUrl.pathname.startsWith("/admin") && request.nextUrl.pathname !== "/admin/login") {
+    if (!user || user.email !== "admin@skilly.com") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/admin/login";
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return supabaseResponse;

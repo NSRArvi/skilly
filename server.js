@@ -1,3 +1,4 @@
+/* eslint-disable */
 const next = require("next");
 const http = require("http");
 

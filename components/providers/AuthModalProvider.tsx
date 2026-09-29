@@ -1,15 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import LoginModal from "../auth/LoginModal";
 import { createClient } from "@/lib/client";
+import type { User } from "@supabase/supabase-js";
 
 interface AuthModalContextType {
   isOpen: boolean;
   openModal: () => void;
   closeModal: () => void;
-  user: any;
+  user: User | null;
   loading: boolean;
   requireAuth: (e: React.MouseEvent, action: () => void) => void;
 }
@@ -18,9 +19,14 @@ const AuthModalContext = createContext<AuthModalContextType | undefined>(undefin
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const isOpenRef = useRef(isOpen);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,7 +40,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user || null);
-        if (session?.user && isOpen) {
+        if (session?.user && isOpenRef.current) {
           setIsOpen(false);
         }
       }
@@ -43,7 +49,7 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [isOpen]);
+  }, [supabase]);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
