@@ -173,21 +173,30 @@ export default function Dashboard() {
     const fileExt = file.name.split(".").pop();
     const fileName = `${userProfile.id}-${type}-${Date.now()}.${fileExt}`;
 
-    // 1. Upload to storage
-    const { error: uploadError } = await supabase.storage
-      .from("kyc-documents")
+    // 1. Upload to storage (avatars bucket with fallback)
+    let finalBucket = "avatars";
+    let uploadRes = await supabase.storage
+      .from("avatars")
       .upload(fileName, file, { upsert: true });
 
-    if (uploadError) {
-      toast.error(`Failed to upload ${type}`);
-      if (type === "avatar") setUploadingAvatar(false);
-      if (type === "cover") setUploadingCover(false);
-      return;
+    if (uploadRes.error) {
+      console.warn("Upload to avatars failed, trying fallback:", uploadRes.error);
+      const fallbackRes = await supabase.storage
+        .from("kyc-documents")
+        .upload(fileName, file, { upsert: true });
+
+      if (fallbackRes.error) {
+        toast.error(`Failed to upload ${type}: ${fallbackRes.error.message}`);
+        if (type === "avatar") setUploadingAvatar(false);
+        if (type === "cover") setUploadingCover(false);
+        return;
+      }
+      finalBucket = "kyc-documents";
     }
 
     const {
       data: { publicUrl },
-    } = supabase.storage.from("kyc-documents").getPublicUrl(fileName);
+    } = supabase.storage.from(finalBucket).getPublicUrl(fileName);
 
     // 2. Update professionals table
     const {

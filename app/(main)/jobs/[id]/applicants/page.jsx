@@ -160,7 +160,7 @@ export default function JobApplicantsPage() {
               Unauthorized
             </h3>
             <p className="text-muted-foreground text-sm mb-6">
-              You don't have permission to view applicants for this job.
+              You don&apos;t have permission to view applicants for this job.
             </p>
             <Link href="/dashboard">
               <Button className="rounded-xl font-semibold">

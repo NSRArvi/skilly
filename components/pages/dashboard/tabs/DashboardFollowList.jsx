@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Loader2, UserMinus } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 import { createClient } from "../../../../lib/client";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -12,72 +12,93 @@ export default function DashboardFollowList({ userId, type }) {
   // type is either "followers" or "following"
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const fetchList = async () => {
-    if (!userId) return;
+  const [prevParams, setPrevParams] = useState({ userId, type });
+  if (prevParams.userId !== userId || prevParams.type !== type) {
+    setPrevParams({ userId, type });
     setLoading(true);
-    const supabase = createClient();
-
-    // Stage 1: Get the follow records
-    let query = supabase.from("followers").select("*");
-    if (type === "followers") {
-      query = query.eq("following_id", userId);
-    } else {
-      query = query.eq("follower_id", userId);
-    }
-
-    const { data: followRecords, error } = await query;
-
-    if (followRecords && followRecords.length > 0) {
-      // Extract the user IDs we need to fetch profiles for
-      const targetUserIds = followRecords.map((r) =>
-        type === "followers" ? r.follower_id : r.following_id,
-      );
-
-      // Stage 2: Fetch profiles from professionals table
-      const { data: profiles } = await supabase
-        .from("professionals")
-        .select("id, user_id, full_name, avatar_url, profession")
-        .in("user_id", targetUserIds);
-
-      if (profiles) {
-        let myFollowingIds = new Set();
-        if (type === "followers") {
-          const { data: myFollowing } = await supabase
-            .from("followers")
-            .select("following_id")
-            .eq("follower_id", userId)
-            .in("following_id", targetUserIds);
-          if (myFollowing) {
-            myFollowingIds = new Set(myFollowing.map((f) => f.following_id));
-          }
-        }
-
-        // Map the profiles back to the follow records
-        const combined = followRecords
-          .map((record) => {
-            const targetId =
-              type === "followers" ? record.follower_id : record.following_id;
-            const profile = profiles.find((p) => p.user_id === targetId);
-            return {
-              ...record,
-              profile,
-              isFollowingBack:
-                type === "followers" ? myFollowingIds.has(targetId) : true,
-            };
-          })
-          .filter((item) => item.profile); // Only keep ones where profile exists
-
-        setList(combined);
-      }
-    } else {
-      setList([]);
-    }
-    setLoading(false);
-  };
+  }
 
   useEffect(() => {
-    fetchList();
+    let isCancelled = false;
+
+    async function load() {
+      if (!userId) {
+        return;
+      }
+      const supabase = createClient();
+
+      // Stage 1: Get the follow records
+      let query = supabase.from("followers").select("*");
+      if (type === "followers") {
+        query = query.eq("following_id", userId);
+      } else {
+        query = query.eq("follower_id", userId);
+      }
+
+      const { data: followRecords } = await query;
+      if (isCancelled) return;
+
+      if (followRecords && followRecords.length > 0) {
+        // Extract the user IDs we need to fetch profiles for
+        const targetUserIds = followRecords.map((r) =>
+          type === "followers" ? r.follower_id : r.following_id,
+        );
+
+        // Stage 2: Fetch profiles from professionals table
+        const { data: profiles } = await supabase
+          .from("professionals")
+          .select("id, user_id, full_name, avatar_url, profession")
+          .in("user_id", targetUserIds);
+
+        if (isCancelled) return;
+
+        if (profiles) {
+          let myFollowingIds = new Set();
+          if (type === "followers") {
+            const { data: myFollowing } = await supabase
+              .from("followers")
+              .select("following_id")
+              .eq("follower_id", userId)
+              .in("following_id", targetUserIds);
+            if (myFollowing) {
+              myFollowingIds = new Set(myFollowing.map((f) => f.following_id));
+            }
+          }
+
+          // Map the profiles back to the follow records
+          const combined = followRecords
+            .map((record) => {
+              const targetId =
+                type === "followers" ? record.follower_id : record.following_id;
+              const profile = profiles.find((p) => p.user_id === targetId);
+              return {
+                ...record,
+                profile,
+                isFollowingBack:
+                  type === "followers" ? myFollowingIds.has(targetId) : true,
+              };
+            })
+            .filter((item) => item.profile); // Only keep ones where profile exists
+
+          if (!isCancelled) {
+            setList(combined);
+          }
+        }
+      } else {
+        if (!isCancelled) {
+          setList([]);
+        }
+      }
+      if (!isCancelled) {
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [userId, type]);
 
   const handleUnfollow = async (followRecordId, name) => {

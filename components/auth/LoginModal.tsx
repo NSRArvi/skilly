@@ -33,8 +33,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         },
       });
       if (oauthError) throw oauthError;
-    } catch (err: any) {
-      setError(err.message || "An error occurred during authentication");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred during authentication";
+      setError(message);
     } finally {
       setIsInitiating(false);
     }
@@ -99,7 +100,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         </button>
 
         <p className="text-muted-foreground text-sm mt-8 text-center">
-          By continuing, you agree to Skilly's{" "}
+          By continuing, you agree to Skilly&apos;s{" "}
           <Link href="#" className="underline hover:text-foreground">
             Terms
           </Link>{" "}

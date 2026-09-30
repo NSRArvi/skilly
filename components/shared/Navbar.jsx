@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { Button } from "../ui/button";
@@ -25,7 +25,11 @@ import { useAuthModal } from "@/components/providers/AuthModalProvider";
 
 export default function Navbar({ onToggleMobileSidebar }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const router = useRouter();
   const { requireAuth } = useAuthModal();
   const [user, setUser] = useState(null);
@@ -40,16 +44,18 @@ export default function Navbar({ onToggleMobileSidebar }) {
   const searchContainerRef = useRef(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+    let ignore = false;
     const fetchUser = async () => {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+      if (!ignore) {
+        setUser(data?.user || null);
+      }
     };
     fetchUser();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Close search dropdown on click outside
@@ -66,21 +72,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced Search
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim().length >= 2) {
-        performSearch(searchQuery.trim());
-      } else {
-        setSearchResults({ professionals: [], jobs: [] });
-        setShowSearchDropdown(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
-  const performSearch = async (query) => {
+  const performSearch = useCallback(async (query) => {
     setIsSearching(true);
     setShowSearchDropdown(true);
     const supabase = createClient();
@@ -104,7 +96,21 @@ export default function Navbar({ onToggleMobileSidebar }) {
       jobs: jobs || [],
     });
     setIsSearching(false);
-  };
+  }, []);
+
+  // Debounced Search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim().length >= 2) {
+        performSearch(searchQuery.trim());
+      } else {
+        setSearchResults({ professionals: [], jobs: [] });
+        setShowSearchDropdown(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, performSearch]);
 
   const toggleTheme = () => {
     const currentTheme = theme === "system" ? resolvedTheme : theme;
@@ -189,7 +195,7 @@ export default function Navbar({ onToggleMobileSidebar }) {
               searchResults.professionals.length === 0 &&
               searchResults.jobs.length === 0 ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
-                  No results found for "{searchQuery}"
+                  No results found for &ldquo;{searchQuery}&rdquo;
                 </div>
               ) : (
                 <div className="py-2">

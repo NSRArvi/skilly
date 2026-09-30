@@ -24,20 +24,25 @@ export default function OrdersAdmin() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    let isCancelled = false;
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    const result = await getOrders();
-
-    if (!result.success) {
-      toast.error(result.error);
-    } else {
-      setOrders(result.data || []);
+    async function load() {
+      const result = await getOrders();
+      if (isCancelled) return;
+      if (!result.success) {
+        toast.error(result.error);
+      } else {
+        setOrders(result.data || []);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  };
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const filtered = orders.filter(
     (o) =>

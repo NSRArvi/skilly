@@ -23,39 +23,47 @@ export default function EditCommunityPostPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchPost();
-  }, [postId]);
+    let ignore = false;
 
-  const fetchPost = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error("Please login first.");
-      openModal();
-      return;
+    async function loadPost() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (ignore) return;
+      if (!user) {
+        toast.error("Please login first.");
+        openModal();
+        return;
+      }
+      setCurrentUser(user);
+
+      const { data, error } = await supabase
+        .from("community_posts")
+        .select("*")
+        .eq("id", postId)
+        .single();
+
+      if (ignore) return;
+      if (error || !data) {
+        toast.error("Post not found.");
+        router.push("/community");
+        return;
+      }
+
+      if (data.user_id !== user.id) {
+        toast.error("You don't have permission to edit this post.");
+        router.push("/community");
+        return;
+      }
+
+      setContent(data.content || "");
+      setLoading(false);
     }
-    setCurrentUser(user);
 
-    const { data, error } = await supabase
-      .from("community_posts")
-      .select("*")
-      .eq("id", postId)
-      .single();
+    loadPost();
 
-    if (error || !data) {
-      toast.error("Post not found.");
-      router.push("/community");
-      return;
-    }
-
-    if (data.user_id !== user.id) {
-      toast.error("You don't have permission to edit this post.");
-      router.push("/community");
-      return;
-    }
-
-    setContent(data.content || "");
-    setLoading(false);
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [postId, supabase, openModal, router]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -98,7 +106,7 @@ export default function EditCommunityPostPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Edit Post</h1>
-            <p className="text-sm text-muted-foreground">Update your post's content</p>
+            <p className="text-sm text-muted-foreground">Update your post&apos;s content</p>
           </div>
         </div>
 

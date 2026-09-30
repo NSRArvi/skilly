@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import Container from "@/components/shared/Container";
 import ProfessionalsCard from "@/components/pages/home/ProfessionalsCard";
 import { createClient } from "@/lib/client";
-import { Country, State, City } from "country-state-city";
+import { fetchCountries, fetchStates, fetchCities } from "@/lib/locations";
 import { SlidersHorizontal, ArrowUpDown, MapPin, Search, X, Loader2 } from "lucide-react";
 import {
   Select,
@@ -32,6 +32,44 @@ export default function ProfessionalsPage() {
   const [selectedState, setSelectedState] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedVerified, setSelectedVerified] = useState("all");
+
+  const [countriesList, setCountriesList] = useState([]);
+  const [statesList, setStatesList] = useState([]);
+  const [citiesList, setCitiesList] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchCountries().then((data) => {
+      if (!ignore) setCountriesList(data);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    if (selectedCountry && selectedCountry !== "all") {
+      fetchStates(selectedCountry).then((data) => {
+        if (!ignore) setStatesList(data);
+      });
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    let ignore = false;
+    if (selectedCountry && selectedCountry !== "all" && selectedState && selectedState !== "all") {
+      fetchCities(selectedCountry, selectedState).then((data) => {
+        if (!ignore) setCitiesList(data);
+      });
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [selectedCountry, selectedState]);
 
   const [sortBy, setSortBy] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
@@ -350,16 +388,20 @@ export default function ProfessionalsPage() {
                     setSelectedCountry(val);
                     setSelectedState("all");
                     setSelectedCity("all");
+                    if (val === "all") {
+                      setStatesList([]);
+                      setCitiesList([]);
+                    }
                   }}
                 >
                   <SelectTrigger className="h-8 rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
                     <SelectValue placeholder="All Countries">
-                      {selectedCountry === "all" ? "All Countries" : Country.getCountryByCode(selectedCountry)?.name}
+                      {selectedCountry === "all" ? "All Countries" : (countriesList.find((c) => c.isoCode === selectedCountry)?.name || selectedCountry)}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-card border-border text-foreground">
                     <SelectItem value="all">All Countries</SelectItem>
-                    {Country.getAllCountries().map((c) => (
+                    {countriesList.map((c) => (
                       <SelectItem key={c.isoCode} value={c.isoCode}>
                         {c.name}
                       </SelectItem>
@@ -375,16 +417,19 @@ export default function ProfessionalsPage() {
                     onValueChange={(val) => {
                       setSelectedState(val);
                       setSelectedCity("all");
+                      if (val === "all") {
+                        setCitiesList([]);
+                      }
                     }}
                   >
                     <SelectTrigger className="h-8 rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
                       <SelectValue placeholder="All Divisions">
-                        {selectedState === "all" ? "All Divisions" : State.getStateByCodeAndCountry(selectedState, selectedCountry)?.name}
+                        {selectedState === "all" ? "All Divisions" : (statesList.find((s) => s.isoCode === selectedState)?.name || selectedState)}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
                       <SelectItem value="all">All Divisions</SelectItem>
-                      {State.getStatesOfCountry(selectedCountry).map((s) => (
+                      {statesList.map((s) => (
                         <SelectItem key={s.isoCode} value={s.isoCode}>
                           {s.name}
                         </SelectItem>
@@ -407,7 +452,7 @@ export default function ProfessionalsPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
                       <SelectItem value="all">All Cities</SelectItem>
-                      {City.getCitiesOfState(selectedCountry, selectedState).map((c) => (
+                      {citiesList.map((c) => (
                         <SelectItem key={c.name} value={c.name}>
                           {c.name}
                         </SelectItem>

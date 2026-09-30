@@ -38,7 +38,7 @@ export default function HowItWorks() {
             Verified in 3 steps, booked in minutes
           </h3>
           <p className="text-muted-foreground text-lg">
-            Trust is built into every step. Here's how Skilly keeps your
+            Trust is built into every step. Here&apos;s how Skilly keeps your
             sessions safe and high-quality.
           </p>
         </div>

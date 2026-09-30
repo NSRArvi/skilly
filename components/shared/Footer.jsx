@@ -23,7 +23,7 @@ export default function Footer() {
               />
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
-              On-demand mentorship from 100% ID-verified professionals. Learn faster, from people who've actually done it.
+              On-demand mentorship from 100% ID-verified professionals. Learn faster, from people who&apos;ve actually done it.
             </p>
             <div className="flex items-center gap-3">
               <a href="#" className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">

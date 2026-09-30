@@ -1,20 +1,23 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
+import React, { useEffect, useState, useCallback, useSyncExternalStore } from "react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { createPortal } from "react-dom";
+
+const emptySubscribe = () => () => {};
 
 export default function ImageGallery({ images, initialIndex = 0, isOpen, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
-  const [isMounted, setIsMounted] = useState(false);
+  const [prevInitialIndex, setPrevInitialIndex] = useState(initialIndex);
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  if (initialIndex !== prevInitialIndex) {
+    setPrevInitialIndex(initialIndex);
+    setCurrentIndex(initialIndex);
+  }
 
   useEffect(() => {
     if (isOpen) {
-      setCurrentIndex(initialIndex);
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -23,7 +26,7 @@ export default function ImageGallery({ images, initialIndex = 0, isOpen, onClose
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, initialIndex]);
+  }, [isOpen]);
 
   const handleNext = useCallback((e) => {
     if (e) e.stopPropagation();

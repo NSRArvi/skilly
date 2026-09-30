@@ -133,11 +133,23 @@ export async function getOrders() {
     if (error) {
       return { success: false, error: "Database error occurred." };
     }
+    interface OrderData {
+      client_id?: string;
+      professional_id?: string;
+      [key: string]: unknown;
+    }
+    interface ProfileSnippet {
+      user_id: string;
+      full_name?: string | null;
+      avatar_url?: string | null;
+    }
+
+    const orderList = (data || []) as OrderData[];
     const userIds = [...new Set([
-      ...(data || []).map((o: any) => o.client_id),
-      ...(data || []).map((o: any) => o.professional_id)
-    ])].filter(Boolean);
-    let profiles: any[] = [];
+      ...orderList.map((o) => o.client_id),
+      ...orderList.map((o) => o.professional_id)
+    ])].filter((id): id is string => Boolean(id));
+    let profiles: ProfileSnippet[] = [];
     if (userIds.length > 0) {
       const { data: profilesData } = await supabase
         .from("professionals")
@@ -145,13 +157,13 @@ export async function getOrders() {
         .in("user_id", userIds);
       if (profilesData) profiles = profilesData;
     }
-    const enrichedOrders = (data || []).map((order: any) => ({
+    const enrichedOrders = orderList.map((order) => ({
       ...order,
       client: profiles.find(p => p.user_id === order.client_id) || null,
       professional: profiles.find(p => p.user_id === order.professional_id) || null
     }));
     return { success: true, data: enrichedOrders };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
@@ -171,8 +183,19 @@ export async function getJobApplicationsForAdmin(jobId: string) {
     if (!appsData || appsData.length === 0) {
       return { success: true, data: [] };
     }
-    const applicantIds = [...new Set(appsData.map((a: any) => a.applicant_id))];
-    let profiles: any[] = [];
+    interface ApplicationData {
+      applicant_id: string;
+      [key: string]: unknown;
+    }
+    interface ProfileSnippet {
+      user_id: string;
+      full_name?: string | null;
+      avatar_url?: string | null;
+    }
+
+    const appList = appsData as ApplicationData[];
+    const applicantIds = [...new Set(appList.map((a) => a.applicant_id))];
+    let profiles: ProfileSnippet[] = [];
     if (applicantIds.length > 0) {
       const { data: profilesData } = await supabase
         .from("professionals")
@@ -180,36 +203,36 @@ export async function getJobApplicationsForAdmin(jobId: string) {
         .in("user_id", applicantIds);
       if (profilesData) profiles = profilesData;
     }
-    const enrichedApps = appsData.map((app: any) => ({
+    const enrichedApps = appList.map((app) => ({
       ...app,
       applicant: profiles.find(p => p.user_id === app.applicant_id) || null
     }));
     return { success: true, data: enrichedApps };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
 
-export async function createCategory(data: any) {
+export async function createCategory(data: Record<string, unknown>) {
   try {
     await requireAdmin();
     const supabase = getAdminSupabase();
     const { data: result, error } = await supabase.from("categories").insert([data]).select().single();
     if (error) return { success: false, error: "Database error occurred." };
     return { success: true, data: result };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
 
-export async function updateCategory(id: string, data: any) {
+export async function updateCategory(id: string, data: Record<string, unknown>) {
   try {
     await requireAdmin();
     const supabase = getAdminSupabase();
     const { error } = await supabase.from("categories").update(data).eq("id", id);
     if (error) return { success: false, error: "Database error occurred." };
     return { success: true };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
@@ -221,24 +244,24 @@ export async function deleteCategoryAction(id: string) {
     const { error } = await supabase.from("categories").delete().eq("id", id);
     if (error) return { success: false, error: "Database error occurred." };
     return { success: true };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
 
-export async function createSubcategory(data: any) {
+export async function createSubcategory(data: Record<string, unknown>) {
   try {
     await requireAdmin();
     const supabase = getAdminSupabase();
     const { data: result, error } = await supabase.from("subcategories").insert([data]).select().single();
     if (error) return { success: false, error: "Database error occurred." };
     return { success: true, data: result };
-  } catch (err) {
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }
 
-export async function updateSubcategory(id: string, data: any) {
+export async function updateSubcategory(id: string, data: Record<string, unknown>) {
   try {
     await requireAdmin();
     const supabase = getAdminSupabase();
@@ -258,6 +281,83 @@ export async function deleteSubcategoryAction(id: string) {
     if (error) return { success: false, error: "Database error occurred." };
     return { success: true };
   } catch (err) {
+    return { success: false, error: "Unauthorized" };
+  }
+}
+
+function extractStoragePath(pathOrUrl: string, bucket = "kyc-documents"): string {
+  if (!pathOrUrl) return "";
+  let trimmed = pathOrUrl.trim().split("?")[0];
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    try {
+      const url = new URL(trimmed);
+      const pathname = url.pathname;
+      const marker = `/${bucket}/`;
+      const idx = pathname.indexOf(marker);
+      if (idx !== -1) {
+        return decodeURIComponent(pathname.substring(idx + marker.length));
+      }
+      return decodeURIComponent(pathname.split("/").pop() || "");
+    } catch {
+      return decodeURIComponent(trimmed.split("/").pop() || "");
+    }
+  }
+  if (trimmed.startsWith(`${bucket}/`)) {
+    trimmed = trimmed.substring(`${bucket}/`.length);
+  } else if (trimmed.startsWith(`/${bucket}/`)) {
+    trimmed = trimmed.substring(`/${bucket}/`.length);
+  }
+  return decodeURIComponent(trimmed);
+}
+
+export async function getKycSignedUrl(pathOrUrl: string) {
+  try {
+    await requireAdmin();
+    if (!pathOrUrl) return { success: false, error: "No URL provided" };
+
+    const filePath = extractStoragePath(pathOrUrl, "kyc-documents");
+    if (!filePath) return { success: false, error: "Invalid path" };
+
+    const supabase = getAdminSupabase();
+    const { data, error } = await supabase.storage
+      .from("kyc-documents")
+      .createSignedUrl(filePath, 3600);
+
+    if (error || !data?.signedUrl) {
+      return { success: false, error: "Failed to generate signed URL" };
+    }
+
+    return { success: true, signedUrl: data.signedUrl };
+  } catch {
+    return { success: false, error: "Unauthorized" };
+  }
+}
+
+export async function getKycSignedUrls(pathsOrUrls: { front?: string | null; back?: string | null }) {
+  try {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+    let frontSignedUrl: string | null = null;
+    let backSignedUrl: string | null = null;
+
+    if (pathsOrUrls.front) {
+      const filePath = extractStoragePath(pathsOrUrls.front, "kyc-documents");
+      if (filePath) {
+        const { data } = await supabase.storage.from("kyc-documents").createSignedUrl(filePath, 3600);
+        frontSignedUrl = data?.signedUrl || null;
+      }
+    }
+
+    if (pathsOrUrls.back) {
+      const filePath = extractStoragePath(pathsOrUrls.back, "kyc-documents");
+      if (filePath) {
+        const { data } = await supabase.storage.from("kyc-documents").createSignedUrl(filePath, 3600);
+        backSignedUrl = data?.signedUrl || null;
+      }
+    }
+
+    return { success: true, frontSignedUrl, backSignedUrl };
+  } catch {
     return { success: false, error: "Unauthorized" };
   }
 }

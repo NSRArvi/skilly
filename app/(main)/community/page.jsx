@@ -19,67 +19,76 @@ export default function CommunityPage() {
   const [activeTab, setActiveTab] = useState("all"); // 'all' or 'activities'
 
   useEffect(() => {
-    fetchPosts();
-  }, [activeTab]);
+    let ignore = false;
 
-  const fetchPosts = async () => {
-    setLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    setCurrentUser(user);
+    async function loadPosts() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!ignore) {
+        setCurrentUser(user);
+      }
 
-    let query = supabase
-      .from("community_posts")
-      .select(
-        `
-        *,
-        reactions:community_reactions(count),
-        comments:community_comments(count)
-      `,
-      )
-      .order("created_at", { ascending: false });
+      let query = supabase
+        .from("community_posts")
+        .select(
+          `
+          *,
+          reactions:community_reactions(count),
+          comments:community_comments(count)
+        `,
+        )
+        .order("created_at", { ascending: false });
 
-    if (activeTab === "activities" && user) {
-      query = query.eq("user_id", user.id);
-    } else {
-      query = query.not("is_archived", "eq", true);
+      if (activeTab === "activities" && user) {
+        query = query.eq("user_id", user.id);
+      } else {
+        query = query.not("is_archived", "eq", true);
+      }
+
+      const { data: postsData, error: postsError } = await query;
+
+      if (postsError) {
+        if (!ignore) {
+          toast.error("Failed to load posts");
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (postsData && postsData.length > 0) {
+        const userIds = [...new Set(postsData.map((p) => p.user_id))];
+        const { data: profiles } = await supabase
+          .from("professionals")
+          .select("user_id, full_name, avatar_url")
+          .in("user_id", userIds);
+
+        const enrichedPosts = postsData.map((post) => {
+          const profile = profiles?.find((p) => p.user_id === post.user_id);
+          return {
+            ...post,
+            author: {
+              user_id: post.user_id,
+              full_name: profile?.full_name || "Unknown User",
+              avatar_url: profile?.avatar_url || null,
+            },
+          };
+        });
+        if (!ignore) {
+          setPosts(enrichedPosts);
+          setLoading(false);
+        }
+      } else if (!ignore) {
+        setPosts([]);
+        setLoading(false);
+      }
     }
 
-    const { data: postsData, error: postsError } = await query;
-
-    if (postsError) {
-      toast.error("Failed to load posts");
-      setLoading(false);
-      return;
-    }
-
-    if (postsData && postsData.length > 0) {
-      // Fetch author details from professionals table
-      const userIds = [...new Set(postsData.map((p) => p.user_id))];
-      const { data: profiles } = await supabase
-        .from("professionals")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
-
-      const enrichedPosts = postsData.map((post) => {
-        const profile = profiles?.find((p) => p.user_id === post.user_id);
-        return {
-          ...post,
-          author: {
-            user_id: post.user_id,
-            full_name: profile?.full_name || "Unknown User",
-            avatar_url: profile?.avatar_url || null,
-          },
-        };
-      });
-      setPosts(enrichedPosts);
-    } else {
-      setPosts([]);
-    }
-
-    setLoading(false);
-  };
+    loadPosts();
+    return () => {
+      ignore = true;
+    };
+  }, [activeTab, supabase]);
 
   const handleDelete = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));

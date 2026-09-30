@@ -22,7 +22,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { Country, State, City } from "country-state-city";
+import { fetchCountries, fetchStates, fetchCities } from "@/lib/locations";
 import { createClient } from "@/lib/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -61,6 +61,44 @@ export default function CreateJobPage() {
   const [deadline, setDeadline] = useState("");
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState("");
+
+  const [countriesList, setCountriesList] = useState([]);
+  const [statesList, setStatesList] = useState([]);
+  const [citiesList, setCitiesList] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+    fetchCountries().then((data) => {
+      if (!ignore) setCountriesList(data);
+    });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+    if (countryCode) {
+      fetchStates(countryCode).then((data) => {
+        if (!ignore) setStatesList(data);
+      });
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [countryCode]);
+
+  useEffect(() => {
+    let ignore = false;
+    if (countryCode && stateCode) {
+      fetchCities(countryCode, stateCode).then((data) => {
+        if (!ignore) setCitiesList(data);
+      });
+    }
+    return () => {
+      ignore = true;
+    };
+  }, [countryCode, stateCode]);
 
   useEffect(() => {
     const fetchTaxonomy = async () => {
@@ -300,9 +338,9 @@ export default function CreateJobPage() {
                 <div className="space-y-1.5">
                   <Label className={labelClass}>Country</Label>
                   <Select value={countryCode} onValueChange={(val) => {
-                    const c = Country.getCountryByCode(val);
+                    const c = countriesList.find((item) => item.isoCode === val);
                     setCountryCode(val);
-                    setCountry(c?.name || "");
+                    setCountry(c?.name || val);
                     setStateCode(""); setStateName(""); setCityName("");
                   }}>
                     <SelectTrigger className={selectTriggerClass}>
@@ -311,7 +349,7 @@ export default function CreateJobPage() {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="bg-card border-border text-foreground">
-                      {Country.getAllCountries().map(c => (
+                      {countriesList.map((c) => (
                         <SelectItem key={c.isoCode} value={c.isoCode}>{c.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -321,9 +359,9 @@ export default function CreateJobPage() {
                   <div className="space-y-1.5">
                     <Label className={labelClass}>State / Division</Label>
                     <Select value={stateCode} onValueChange={(val) => {
-                      const s = State.getStateByCodeAndCountry(val, countryCode);
+                      const s = statesList.find((item) => item.isoCode === val);
                       setStateCode(val);
-                      setStateName(s?.name || "");
+                      setStateName(s?.name || val);
                       setCityName("");
                     }}>
                       <SelectTrigger className={selectTriggerClass}>
@@ -332,7 +370,7 @@ export default function CreateJobPage() {
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border text-foreground">
-                        {State.getStatesOfCountry(countryCode).map(s => (
+                        {statesList.map((s) => (
                           <SelectItem key={s.isoCode} value={s.isoCode}>{s.name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -349,7 +387,7 @@ export default function CreateJobPage() {
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="bg-card border-border text-foreground">
-                        {City.getCitiesOfState(countryCode, stateCode).map(c => (
+                        {citiesList.map((c) => (
                           <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
                         ))}
                       </SelectContent>

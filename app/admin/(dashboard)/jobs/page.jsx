@@ -50,55 +50,64 @@ export default function JobsAdmin() {
   const supabase = createClient();
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
+    let isCancelled = false;
 
-  const fetchJobs = async () => {
-    setLoading(true);
-    const { data: jobsData, error: jobsError } = await supabase
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
+    async function load() {
+      const { data: jobsData, error: jobsError } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (jobsError) {
-      toast.error(jobsError.message);
+      if (isCancelled) return;
+
+      if (jobsError) {
+        toast.error(jobsError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!jobsData || jobsData.length === 0) {
+        setJobs([]);
+        setLoading(false);
+        return;
+      }
+
+      // Extract unique user IDs
+      const userIds = [
+        ...new Set(jobsData.map((j) => j.user_id).filter(Boolean)),
+      ];
+
+      // Fetch corresponding professional profiles manually to avoid schema cache errors
+      const { data: profilesData } = await supabase
+        .from("professionals")
+        .select("user_id, full_name, avatar_url")
+        .in("user_id", userIds);
+
+      if (isCancelled) return;
+
+      const profilesMap = {};
+      if (profilesData) {
+        profilesData.forEach((p) => {
+          profilesMap[p.user_id] = p;
+        });
+      }
+
+      // Attach professional data to jobs
+      const jobsWithProfiles = jobsData.map((job) => ({
+        ...job,
+        professionals: profilesMap[job.user_id] || null,
+      }));
+
+      setJobs(jobsWithProfiles);
       setLoading(false);
-      return;
     }
 
-    if (!jobsData || jobsData.length === 0) {
-      setJobs([]);
-      setLoading(false);
-      return;
-    }
+    load();
 
-    // Extract unique user IDs
-    const userIds = [
-      ...new Set(jobsData.map((j) => j.user_id).filter(Boolean)),
-    ];
-
-    // Fetch corresponding professional profiles manually to avoid schema cache errors
-    const { data: profilesData } = await supabase
-      .from("professionals")
-      .select("user_id, full_name, avatar_url")
-      .in("user_id", userIds);
-
-    const profilesMap = {};
-    if (profilesData) {
-      profilesData.forEach((p) => {
-        profilesMap[p.user_id] = p;
-      });
-    }
-
-    // Attach professional data to jobs
-    const jobsWithProfiles = jobsData.map((job) => ({
-      ...job,
-      professionals: profilesMap[job.user_id] || null,
-    }));
-
-    setJobs(jobsWithProfiles);
-    setLoading(false);
-  };
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase]);
 
   const handleOpenReview = async (job) => {
     setSelectedJob(job);

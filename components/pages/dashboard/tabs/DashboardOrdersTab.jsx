@@ -55,67 +55,76 @@ const statusConfig = {
 export default function DashboardOrdersTab({ userId }) {
   const [view, setView] = useState("received"); // 'received' or 'placed'
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(userId));
   const [updatingTask, setUpdatingTask] = useState(null);
   const [updatingAction, setUpdatingAction] = useState(null);
-
-  const fetchOrders = async () => {
-    if (!userId) return;
-    if (orders.length === 0) setLoading(true);
-    const supabase = createClient();
-
-    let query = supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (view === "received") {
-      query = query.eq("professional_id", userId);
-    } else {
-      query = query.eq("client_id", userId);
-    }
-
-    const { data: rawOrders, error } = await query;
-
-    if (rawOrders && rawOrders.length > 0) {
-      // Get unique user IDs to fetch profiles for
-      const targetUserIds = [
-        ...new Set(
-          rawOrders.map((o) =>
-            view === "received" ? o.client_id : o.professional_id,
-          ),
-        ),
-      ];
-
-      const { data: profiles } = await supabase
-        .from("professionals")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", targetUserIds);
-
-      if (profiles) {
-        const enrichedOrders = rawOrders.map((order) => {
-          const targetId =
-            view === "received" ? order.client_id : order.professional_id;
-          const profile = profiles.find((p) => p.user_id === targetId);
-          return {
-            ...order,
-            targetProfile: profile || { full_name: "Unknown User" },
-          };
-        });
-        setOrders(enrichedOrders);
-      } else {
-        setOrders(rawOrders);
-      }
-    } else {
-      setOrders([]);
-    }
-
-    setLoading(false);
-  };
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    fetchOrders();
-  }, [userId, view]);
+    if (!userId) return;
+
+    let isCancelled = false;
+    const supabase = createClient();
+
+    async function load() {
+      let query = supabase
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (view === "received") {
+        query = query.eq("professional_id", userId);
+      } else {
+        query = query.eq("client_id", userId);
+      }
+
+      const { data: rawOrders } = await query;
+      if (isCancelled) return;
+
+      if (rawOrders && rawOrders.length > 0) {
+        // Get unique user IDs to fetch profiles for
+        const targetUserIds = [
+          ...new Set(
+            rawOrders.map((o) =>
+              view === "received" ? o.client_id : o.professional_id,
+            ),
+          ),
+        ];
+
+        const { data: profiles } = await supabase
+          .from("professionals")
+          .select("user_id, full_name, avatar_url")
+          .in("user_id", targetUserIds);
+
+        if (isCancelled) return;
+
+        if (profiles) {
+          const enrichedOrders = rawOrders.map((order) => {
+            const targetId =
+              view === "received" ? order.client_id : order.professional_id;
+            const profile = profiles.find((p) => p.user_id === targetId);
+            return {
+              ...order,
+              targetProfile: profile || { full_name: "Unknown User" },
+            };
+          });
+          setOrders(enrichedOrders);
+        } else {
+          setOrders(rawOrders);
+        }
+      } else {
+        setOrders([]);
+      }
+
+      setLoading(false);
+    }
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userId, view, refreshKey]);
 
   const handleAction = async (orderId, newStatus, otherUserId) => {
     setUpdatingAction(orderId);
@@ -152,7 +161,7 @@ export default function DashboardOrdersTab({ userId }) {
         });
     }
 
-    await fetchOrders();
+    setRefreshKey((k) => k + 1);
     setUpdatingAction(null);
   };
 
@@ -187,7 +196,7 @@ export default function DashboardOrdersTab({ userId }) {
 
     toast.success("Task status updated");
     setUpdatingTask(null);
-    fetchOrders();
+    setRefreshKey((k) => k + 1);
   };
 
   return (

@@ -19,10 +19,12 @@ import {
   Link as LinkIcon,
   Star,
   Users2Icon,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { toggleProfessionalVerification } from "../../actions";
+import { toggleProfessionalVerification, getKycSignedUrls } from "../../actions";
 import {
   AdminTableSkeleton,
   AdminGridSkeleton,
@@ -34,23 +36,80 @@ export default function ProfessionalsAdmin() {
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState("table");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [kycUrls, setKycUrls] = useState({ front: null, back: null, loading: false });
   const supabase = createClient();
 
   useEffect(() => {
-    fetchProfessionals();
-  }, []);
+    let isCancelled = false;
 
-  const fetchProfessionals = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("professionals")
-      .select("*")
-      .order("created_at", { ascending: false });
+    async function load() {
+      const { data, error } = await supabase
+        .from("professionals")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) toast.error(error.message);
-    else setProfessionals(data || []);
-    setLoading(false);
-  };
+      if (isCancelled) return;
+
+      if (error) toast.error(error.message);
+      else setProfessionals(data || []);
+      setLoading(false);
+    }
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase]);
+
+  const [prevSelectedId, setPrevSelectedId] = useState(null);
+  const currentSelectedId = selectedUser?.id || null;
+  if (currentSelectedId !== prevSelectedId) {
+    setPrevSelectedId(currentSelectedId);
+    setKycUrls({
+      front: null,
+      back: null,
+      loading: Boolean(selectedUser?.id_front_url || selectedUser?.id_back_url),
+    });
+  }
+
+  useEffect(() => {
+    if (!selectedUser?.id_front_url && !selectedUser?.id_back_url) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    async function fetchSignedKyc() {
+      try {
+        const res = await getKycSignedUrls({
+          front: selectedUser.id_front_url,
+          back: selectedUser.id_back_url,
+        });
+
+        if (!isCancelled && res.success) {
+          setKycUrls({
+            front: res.frontSignedUrl || null,
+            back: res.backSignedUrl || null,
+            loading: false,
+          });
+        } else if (!isCancelled) {
+          setKycUrls({ front: null, back: null, loading: false });
+        }
+      } catch (err) {
+        console.error("Failed to load KYC signed URLs:", err);
+        if (!isCancelled) {
+          setKycUrls({ front: null, back: null, loading: false });
+        }
+      }
+    }
+
+    fetchSignedKyc();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedUser?.id, selectedUser?.id_front_url, selectedUser?.id_back_url]);
 
   const handleToggleVerify = async (id, currentStatus) => {
     const newStatus = !currentStatus;
@@ -179,6 +238,17 @@ export default function ProfessionalsAdmin() {
                 </div>
                 <div className="text-xs text-gray-500 space-y-1">
                   <p className="truncate">{user.email}</p>
+                  {user.phone_number && (
+                    <p className="flex items-center gap-1 text-gray-600 truncate">
+                      <Phone className="w-3 h-3 text-gray-400 shrink-0" />
+                      {(user.country_code || user.phone_code) && (
+                        <span className="font-semibold text-gray-700">
+                          {user.country_code || user.phone_code}
+                        </span>
+                      )}
+                      <span>{user.phone_number}</span>
+                    </p>
+                  )}
                   <p>
                     Joined: {new Date(user.created_at).toLocaleDateString()}
                   </p>
@@ -238,7 +308,18 @@ export default function ProfessionalsAdmin() {
                     <td className="px-6 py-4">
                       <div className="text-gray-900">{user.email}</div>
                       <div className="text-xs text-gray-500">
-                        {user.phone_number || "-"}
+                        {user.phone_number ? (
+                          <span className="flex items-center gap-1">
+                            {(user.country_code || user.phone_code) && (
+                              <span className="font-semibold text-gray-700">
+                                {user.country_code || user.phone_code}
+                              </span>
+                            )}
+                            <span>{user.phone_number}</span>
+                          </span>
+                        ) : (
+                          "-"
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-500">
@@ -307,6 +388,17 @@ export default function ProfessionalsAdmin() {
                     <p className="text-xs text-gray-500 mt-1">
                       {selectedUser.email}
                     </p>
+                    {selectedUser.phone_number && (
+                      <p className="text-xs text-gray-600 mt-1 flex items-center justify-center gap-1">
+                        <Phone className="w-3 h-3 text-gray-400 shrink-0" />
+                        {(selectedUser.country_code || selectedUser.phone_code) && (
+                          <span className="font-semibold text-gray-700">
+                            {selectedUser.country_code || selectedUser.phone_code}
+                          </span>
+                        )}
+                        <span>{selectedUser.phone_number}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 text-xs font-medium text-gray-500 pt-2">
@@ -456,11 +548,20 @@ export default function ProfessionalsAdmin() {
                       <span className="block text-xs font-semibold text-gray-400 uppercase">
                         Phone
                       </span>
-                      <span className="text-sm text-gray-900 font-medium flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-gray-400" />{" "}
-                        {selectedUser.phone_number
-                          ? `${selectedUser.phone_code} ${selectedUser.phone_number}`
-                          : "N/A"}
+                      <span className="text-sm text-gray-900 font-medium flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />{" "}
+                        {selectedUser.phone_number ? (
+                          <span>
+                            {(selectedUser.country_code || selectedUser.phone_code) && (
+                              <span className="font-semibold text-gray-700 mr-1.5">
+                                {selectedUser.country_code || selectedUser.phone_code}
+                              </span>
+                            )}
+                            {selectedUser.phone_number}
+                          </span>
+                        ) : (
+                          "N/A"
+                        )}
                       </span>
                     </div>
                     <div className="col-span-2">
@@ -630,44 +731,73 @@ export default function ProfessionalsAdmin() {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">
-                      Identity Documents
-                    </h4>
-                    <div className="flex gap-4">
-                      {selectedUser.id_front_url ? (
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        Identity Documents
+                      </h4>
+                      {selectedUser.id_type && (
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 bg-indigo-50 text-indigo-700 rounded-md capitalize">
+                          {selectedUser.id_type.replace("-", " ")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-4">
+                      {kycUrls.front ? (
                         <a
-                          href={selectedUser.id_front_url}
+                          href={kycUrls.front}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block w-32 h-20 bg-gray-100 rounded-lg overflow-hidden hover:opacity-80 transition-opacity border border-gray-200"
+                          className="group relative block w-44 h-28 bg-gray-100 rounded-xl overflow-hidden hover:ring-2 hover:ring-indigo-500 transition-all border border-gray-200 shadow-sm"
                         >
                           <img
-                            src={selectedUser.id_front_url}
+                            src={kycUrls.front}
                             alt="ID Front"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-semibold">
+                            <ExternalLink className="w-3.5 h-3.5" /> View Full
+                          </div>
+                          <span className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded font-medium">
+                            Front ID
+                          </span>
                         </a>
+                      ) : selectedUser.id_front_url && kycUrls.loading ? (
+                        <div className="w-44 h-28 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-xs text-gray-400">
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                          <span>Loading Front...</span>
+                        </div>
                       ) : (
-                        <div className="w-32 h-20 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 text-center px-2">
+                        <div className="w-44 h-28 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 text-center px-2">
                           No Front ID
                         </div>
                       )}
 
-                      {selectedUser.id_back_url ? (
+                      {kycUrls.back ? (
                         <a
-                          href={selectedUser.id_back_url}
+                          href={kycUrls.back}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block w-32 h-20 bg-gray-100 rounded-lg overflow-hidden hover:opacity-80 transition-opacity border border-gray-200"
+                          className="group relative block w-44 h-28 bg-gray-100 rounded-xl overflow-hidden hover:ring-2 hover:ring-indigo-500 transition-all border border-gray-200 shadow-sm"
                         >
                           <img
-                            src={selectedUser.id_back_url}
+                            src={kycUrls.back}
                             alt="ID Back"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-semibold">
+                            <ExternalLink className="w-3.5 h-3.5" /> View Full
+                          </div>
+                          <span className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded font-medium">
+                            Back ID
+                          </span>
                         </a>
+                      ) : selectedUser.id_back_url && kycUrls.loading ? (
+                        <div className="w-44 h-28 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-xs text-gray-400">
+                          <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
+                          <span>Loading Back...</span>
+                        </div>
                       ) : (
-                        <div className="w-32 h-20 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 text-center px-2">
+                        <div className="w-44 h-28 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400 text-center px-2">
                           No Back ID
                         </div>
                       )}

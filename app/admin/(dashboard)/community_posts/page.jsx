@@ -26,45 +26,54 @@ export default function CommunityAdmin() {
   const supabase = createClient();
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    let isCancelled = false;
 
-  const fetchPosts = async () => {
-    setLoading(true);
-    const { data: postsData, error: postsError } = await supabase
-      .from("community_posts")
-      .select("*, community_comments(count), community_reactions(count)")
-      .order("created_at", { ascending: false });
-    
-    if (postsError) {
-      toast.error(postsError.message);
-      setLoading(false);
-      return;
-    }
-
-    if (postsData && postsData.length > 0) {
-      const userIds = [...new Set(postsData.map(p => p.user_id))];
-      const { data: profiles } = await supabase
-        .from("professionals")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
+    async function load() {
+      const { data: postsData, error: postsError } = await supabase
+        .from("community_posts")
+        .select("*, community_comments(count), community_reactions(count)")
+        .order("created_at", { ascending: false });
       
-      const enrichedPosts = postsData.map(post => {
-        const profile = profiles?.find(p => p.user_id === post.user_id);
-        return {
-          ...post,
-          professionals: profile || null,
-          comment_count: post.community_comments?.[0]?.count || 0,
-          reaction_count: post.community_reactions?.[0]?.count || 0,
-        };
-      });
-      setPosts(enrichedPosts);
-    } else {
-      setPosts([]);
+      if (isCancelled) return;
+
+      if (postsError) {
+        toast.error(postsError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (postsData && postsData.length > 0) {
+        const userIds = [...new Set(postsData.map(p => p.user_id))];
+        const { data: profiles } = await supabase
+          .from("professionals")
+          .select("user_id, full_name, avatar_url")
+          .in("user_id", userIds);
+        
+        if (isCancelled) return;
+
+        const enrichedPosts = postsData.map(post => {
+          const profile = profiles?.find(p => p.user_id === post.user_id);
+          return {
+            ...post,
+            professionals: profile || null,
+            comment_count: post.community_comments?.[0]?.count || 0,
+            reaction_count: post.community_reactions?.[0]?.count || 0,
+          };
+        });
+        setPosts(enrichedPosts);
+      } else {
+        setPosts([]);
+      }
+      
+      setLoading(false);
     }
-    
-    setLoading(false);
-  };
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase]);
 
   const deletePost = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this post?")) return;

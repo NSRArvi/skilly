@@ -30,26 +30,17 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
   const router = useRouter();
 
   // "first active tab will be professional." - per user instruction, default to "Professionals"
-  const [activeTab, setActiveTab] = useState("Professionals");
+  const activeTab = (() => {
+    if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
+      return "Dashboard";
+    }
+    if (pathname === "/jobs" || pathname.startsWith("/jobs/")) {
+      return "Jobs & Projects";
+    }
+    return "Professionals";
+  })();
 
   const { requireAuth, user } = useAuthModal();
-
-  useEffect(() => {
-    // Keep activeTab in sync with pathname, defaulting to Professionals
-    if (
-      pathname === "/professionals" ||
-      pathname.startsWith("/professionals/")
-    ) {
-      setActiveTab("Professionals");
-    } else if (
-      pathname === "/dashboard" ||
-      pathname.startsWith("/dashboard/")
-    ) {
-      setActiveTab("Dashboard");
-    } else if (pathname === "/jobs" || pathname.startsWith("/jobs/")) {
-      setActiveTab("Jobs & Projects");
-    }
-  }, [pathname]);
 
   const handleLogout = async () => {
     const supabase = createClient();

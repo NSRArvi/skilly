@@ -455,7 +455,7 @@ export default function ProfessionalDetailsPage() {
                 {/* Bio Tagline beneath headline */}
                 {profile.rating_message && (
                   <p className="text-xs md:text-sm text-primary/90 font-medium italic">
-                    "{profile.rating_message}"
+                    &ldquo;{profile.rating_message}&rdquo;
                   </p>
                 )}
 
@@ -586,7 +586,7 @@ export default function ProfessionalDetailsPage() {
               <div className="text-xs md:text-sm text-foreground/90 leading-relaxed whitespace-pre-line pt-1 font-sans">
                 {profile.bio || (
                   <p className="text-muted-foreground italic">
-                    This professional hasn't written a biography yet.
+                    This professional hasn&apos;t written a biography yet.
                   </p>
                 )}
               </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/client";
 import { Search, LifeBuoy, Eye, Trash2, Mail, X, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -15,20 +14,25 @@ export default function SupportAdmin() {
   const [selectedMessage, setSelectedMessage] = useState(null);
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
+    let isCancelled = false;
 
-  const fetchMessages = async () => {
-    setLoading(true);
-    const result = await getSupportMessages();
-    
-    if (!result.success) {
-      toast.error(result.error);
-    } else {
-      setMessages(result.data || []);
+    async function load() {
+      const result = await getSupportMessages();
+      if (isCancelled) return;
+      if (!result.success) {
+        toast.error(result.error);
+      } else {
+        setMessages(result.data || []);
+      }
+      setLoading(false);
     }
-    setLoading(false);
-  };
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const deleteMessage = async (id) => {
     if (!window.confirm("Are you sure you want to permanently delete this message?")) return;

@@ -36,32 +36,40 @@ export default function CategoriesAdmin() {
   const supabase = createClient();
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    let isCancelled = false;
 
-  const fetchData = async () => {
-    setLoading(true);
-    
-    // Fetch Categories
-    const { data: catData, error: catError } = await supabase
-      .from("categories")
-      .select("*")
-      .order("name", { ascending: true });
+    async function load() {
+      // Fetch Categories
+      const { data: catData, error: catError } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true });
 
-    if (catError) toast.error(catError.message);
-    else setCategories(catData || []);
+      if (isCancelled) return;
 
-    // Fetch Subcategories
-    const { data: subData, error: subError } = await supabase
-      .from("subcategories")
-      .select("*")
-      .order("name", { ascending: true });
+      if (catError) toast.error(catError.message);
+      else setCategories(catData || []);
 
-    if (subError) toast.error(subError.message);
-    else setSubcategories(subData || []);
-    
-    setLoading(false);
-  };
+      // Fetch Subcategories
+      const { data: subData, error: subError } = await supabase
+        .from("subcategories")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (isCancelled) return;
+
+      if (subError) toast.error(subError.message);
+      else setSubcategories(subData || []);
+      
+      setLoading(false);
+    }
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase]);
 
   // --- Category Actions ---
   const openAddCategory = () => {

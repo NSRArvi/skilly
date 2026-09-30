@@ -40,54 +40,69 @@ export default function DashboardJobsTab({ userId }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMyJobs = async () => {
-    if (!userId) return;
+  const [prevView, setPrevView] = useState(view);
+  if (view !== prevView) {
+    setPrevView(view);
     setLoading(true);
-    const supabase = createClient();
-
-    if (view === "posted") {
-      const { data } = await supabase
-        .from("jobs")
-        .select(
-          "*, categories(name), subcategories(name), job_applications(id)",
-        )
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (data) setJobs(data);
-    } else {
-      const { data } = await supabase
-        .from("job_applications")
-        .select(
-          "id, status, created_at, cover_letter, jobs(*, categories(name), subcategories(name))",
-        )
-        .eq("applicant_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (data) {
-        // Flatten so it resembles a job object but with application details
-        const flattened = data
-          .map((app) => {
-            // Handle cases where job might be deleted
-            if (!app.jobs) return null;
-            return {
-              ...app.jobs,
-              application_id: app.id,
-              application_status: app.status,
-              applied_at: app.created_at,
-            };
-          })
-          .filter(Boolean);
-        setJobs(flattened);
-      } else {
-        setJobs([]);
-      }
-    }
-    setLoading(false);
-  };
+  }
 
   useEffect(() => {
-    fetchMyJobs();
+    let isCancelled = false;
+
+    async function load() {
+      if (!userId) {
+        return;
+      }
+      const supabase = createClient();
+
+      if (view === "posted") {
+        const { data } = await supabase
+          .from("jobs")
+          .select(
+            "*, categories(name), subcategories(name), job_applications(id)",
+          )
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (isCancelled) return;
+        if (data) setJobs(data);
+      } else {
+        const { data } = await supabase
+          .from("job_applications")
+          .select(
+            "id, status, created_at, cover_letter, jobs(*, categories(name), subcategories(name))",
+          )
+          .eq("applicant_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (isCancelled) return;
+        if (data) {
+          const flattened = data
+            .map((app) => {
+              if (!app.jobs) return null;
+              return {
+                ...app.jobs,
+                application_id: app.id,
+                application_status: app.status,
+                applied_at: app.created_at,
+              };
+            })
+            .filter(Boolean);
+          setJobs(flattened);
+        } else {
+          setJobs([]);
+        }
+      }
+      if (!isCancelled) {
+        setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [userId, view]);
 
   const handleDelete = async (jobId, jobTitle) => {
@@ -198,7 +213,7 @@ export default function DashboardJobsTab({ userId }) {
           <Briefcase className="w-8 h-8 text-primary mx-auto" />
           <h3 className="text-foreground font-semibold">No Applications Yet</h3>
           <p className="text-xs max-w-md mx-auto">
-            You haven't applied to any jobs yet. Browse available jobs and
+            You haven&apos;t applied to any jobs yet. Browse available jobs and
             submit your proposals.
           </p>
           <Link href="/jobs">
