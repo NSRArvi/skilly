@@ -406,37 +406,34 @@ function MessagesContent() {
                 <div
                   key={conv.id}
                   onClick={() => setActiveConversationId(conv.id)}
-                  className={`flex items-center gap-4 px-4 lg:px-5 py-3.5 mx-2 lg:mx-3 rounded-2xl cursor-pointer transition-all duration-200 ${
+                  className={`group mb-1.5 relative flex items-center gap-3.5 px-3.5 lg:px-4 py-3 mx-2 lg:mx-2.5 rounded-2xl cursor-pointer transition-all duration-200 border ${
                     activeConversationId === conv.id
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-[0.98]"
-                      : "hover:bg-muted/60 text-foreground hover:scale-[0.99]"
                   }`}
                 >
+                  {/* Subtle active left accent pill */}
+                  {activeConversationId === conv.id && (
+                    <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-full" />
+                  )}
+
                   <div className="relative flex-shrink-0">
                     <Avatar
-                      className={`w-12 h-12 border-2 ${activeConversationId === conv.id ? "border-primary-foreground/20" : "border-background"} shadow-sm`}
+                      className={`w-11 h-11 border transition-colors shadow-xs ${
+                        activeConversationId === conv.id
+                          ? "border-primary/40 ring-2 ring-primary/20"
+                          : "border-border/60"
+                      }`}
                     >
                       <AvatarImage src={conv.otherUser.avatar_url} />
-                      <AvatarFallback
-                        className={
-                          activeConversationId === conv.id
-                            ? "bg-primary-foreground/20 text-primary-foreground"
-                            : "bg-primary/10 text-primary"
-                        }
-                      >
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                         {conv.otherUser.full_name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
                     {/* Status indicator dot */}
                     <div
-                      className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 transition-colors ${
-                        activeConversationId === conv.id
-                          ? isUserOnline
-                            ? "border-primary bg-emerald-400"
-                            : "border-primary bg-primary-foreground/40"
-                          : isUserOnline
-                            ? "border-card bg-emerald-500"
-                            : "border-card bg-muted-foreground/30"
+                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background transition-colors ${
+                        isUserOnline
+                          ? "bg-emerald-500"
+                          : "bg-muted-foreground/30"
                       }`}
                       title={isUserOnline ? "Online" : "Offline"}
                     />
@@ -445,13 +442,15 @@ function MessagesContent() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <h4
-                        className={`text-sm font-bold truncate ${activeConversationId === conv.id ? "text-primary-foreground" : "text-foreground"}`}
+                        className={`text-sm font-bold truncate transition-colors ${
+                          activeConversationId === conv.id
+                            ? "text-primary"
+                            : "text-foreground group-hover:text-foreground"
+                        }`}
                       >
                         {conv.otherUser.full_name}
                       </h4>
-                      <span
-                        className={`text-[10px] font-medium whitespace-nowrap ml-2 ${activeConversationId === conv.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}
-                      >
+                      <span className="text-[10px] font-medium whitespace-nowrap ml-2 text-muted-foreground">
                         {new Date(conv.updated_at).toLocaleDateString([], {
                           month: "short",
                           day: "numeric",
@@ -459,7 +458,11 @@ function MessagesContent() {
                       </span>
                     </div>
                     <p
-                      className={`text-xs truncate ${activeConversationId === conv.id ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                      className={`text-xs truncate transition-colors ${
+                        activeConversationId === conv.id
+                          ? "text-foreground/80 font-medium"
+                          : "text-muted-foreground"
+                      }`}
                     >
                       Click to view conversation
                     </p>

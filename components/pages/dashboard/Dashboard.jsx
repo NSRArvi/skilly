@@ -439,14 +439,14 @@ export default function Dashboard() {
             <TabsList className="justify-start h-auto p-0 bg-transparent gap-2 flex-nowrap">
               <TabsTrigger
                 value="profile"
-                className="rounded-xl px-4 py-2 text-xs md:text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md text-muted-foreground hover:text-foreground flex items-center gap-2"
+                className="rounded-xl px-4 py-2 text-xs md:text-sm font-semibold transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 <IdCard className="w-4 h-4" />
                 Profile & Details
               </TabsTrigger>
               <TabsTrigger
                 value="digital-id"
-                className="rounded-xl px-4 py-2 text-xs md:text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md text-muted-foreground hover:text-foreground flex items-center gap-2"
+                className="rounded-xl px-4 py-2 text-xs md:text-sm font-semibold transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 <QrCode className="w-4 h-4" />
                 Digital ID
