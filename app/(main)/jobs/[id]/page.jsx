@@ -212,11 +212,11 @@ export default function JobDetailsPage() {
   const locationParts = [
     job.full_address,
     job.city,
-    job.state,
-    job.country,
+    job.state && job.state !== job.city ? `${job.state} Division` : null,
+    job.country || "Bangladesh",
   ].filter(Boolean);
   const locationStr =
-    locationParts.length > 0 ? locationParts.join(", ") : null;
+    locationParts.length > 0 ? locationParts.join(", ") : "Bangladesh";
 
   const postedDate = new Date(job.created_at).toLocaleDateString("en-US", {
     month: "long",

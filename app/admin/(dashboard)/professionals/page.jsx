@@ -208,7 +208,7 @@ export default function ProfessionalsAdmin() {
                   <img
                     src={user.cover_image_url}
                     alt="Cover"
-                    className="w-full h-full object-cover opacity-60 mix-blend-overlay"
+                    className="w-full h-full object-cover"
                   />
                 )}
                 <div className="absolute -bottom-8 left-6">

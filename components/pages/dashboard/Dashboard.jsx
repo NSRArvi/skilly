@@ -19,8 +19,11 @@ import {
   IdCard,
   Briefcase,
   Sparkles,
+  QrCode,
 } from "lucide-react";
 import ProfileTab from "./tabs/ProfileTab";
+import DigitalIdTab from "./tabs/DigitalIdTab";
+import ServicesTab from "./tabs/ServicesTab";
 import DashboardJobsTab from "./tabs/DashboardJobsTab";
 import DashboardOrdersTab from "./tabs/DashboardOrdersTab";
 import DashboardFollowList from "./tabs/DashboardFollowList";
@@ -71,7 +74,7 @@ export default function Dashboard() {
         const { data: profDataArray, error } = await supabase
           .from("professionals")
           .select(
-            "id, full_name, profession, bio, rating_message, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url, created_at, present_address",
+            "id, full_name, profession, bio, rating_message, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url, created_at, present_address, phone_number, phone_code",
           )
           .eq("user_id", user.id)
           .limit(1);
@@ -144,6 +147,8 @@ export default function Dashboard() {
             joinedDate: joinedStr,
             location: locationStr,
             completionPercentage: completion,
+            phoneNumber: profData.phone_number || "",
+            phoneCode: profData.phone_code || "+880",
           });
         } else {
           setUserProfile((prev) => ({
@@ -440,6 +445,13 @@ export default function Dashboard() {
                 Profile & Details
               </TabsTrigger>
               <TabsTrigger
+                value="digital-id"
+                className="rounded-xl px-4 py-2 text-xs md:text-sm font-semibold transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md text-muted-foreground hover:text-foreground flex items-center gap-2"
+              >
+                <QrCode className="w-4 h-4" />
+                Digital ID
+              </TabsTrigger>
+              <TabsTrigger
                 value="orders"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
@@ -452,13 +464,13 @@ export default function Dashboard() {
                 <Briefcase className="w-4 h-4" />
                 Jobs
               </TabsTrigger>
-              {/* <TabsTrigger
+              <TabsTrigger
                 value="services"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4" />
                 Services
-              </TabsTrigger> */}
+              </TabsTrigger>
               <TabsTrigger
                 value="following"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
@@ -499,6 +511,12 @@ export default function Dashboard() {
               <ProfileTab onProfileUpdate={() => setRefreshKey((r) => r + 1)} />
             </TabsContent>
             <TabsContent
+              value="digital-id"
+              className="m-0 border-none outline-none"
+            >
+              <DigitalIdTab profile={userProfile} />
+            </TabsContent>
+            <TabsContent
               value="orders"
               className="m-0 border-none outline-none"
             >
@@ -507,27 +525,12 @@ export default function Dashboard() {
             <TabsContent value="jobs" className="m-0 border-none outline-none">
               <DashboardJobsTab userId={userProfile.id} />
             </TabsContent>
-            {/* <TabsContent
+            <TabsContent
               value="services"
               className="m-0 border-none outline-none"
             >
-              <div className="bg-card border border-border rounded-2xl p-8 text-center text-muted-foreground space-y-3">
-                <Sparkles className="w-8 h-8 text-primary mx-auto" />
-                <h3 className="text-foreground font-semibold">
-                  My Services & Packages
-                </h3>
-                <p className="text-xs max-w-md mx-auto">
-                  Package your expertise into bookable services, design audits,
-                  and consulting sprints.
-                </p>
-                <Button
-                  onClick={() => toast.info("Service creation modal")}
-                  className="mt-2 text-xs font-bold rounded-xl"
-                >
-                  + Create New Service
-                </Button>
-              </div>
-            </TabsContent> */}
+              <ServicesTab userId={userProfile.id} />
+            </TabsContent>
             <TabsContent
               value="following"
               className="m-0 border-none outline-none"

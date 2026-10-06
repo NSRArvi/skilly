@@ -116,8 +116,11 @@ export default function ProfileTab({ onProfileUpdate }) {
           setDailyRate(profData.daily_rate ? String(profData.daily_rate) : "");
           setDateOfBirth(profData.date_of_birth || "");
           setGender(profData.gender || "prefer-not");
-          setPhoneCode(profData.phone_code || "+880");
-          setPhoneNumber(profData.phone_number || "");
+          setPhoneCode("+880");
+          let rawPhone = (profData.phone_number || "").replace(/\D/g, "");
+          if (rawPhone.startsWith("880")) rawPhone = rawPhone.slice(3);
+          if (rawPhone.startsWith("0")) rawPhone = rawPhone.slice(1);
+          setPhoneNumber(rawPhone.slice(0, 10));
           setBioTagline(profData.rating_message || "");
           setAboutText(profData.bio || "");
           setSelectedCategory(profData.category_id || "");
@@ -242,6 +245,13 @@ export default function ProfileTab({ onProfileUpdate }) {
       whatsapp: socialWhatsapp,
       discord: socialDiscord,
     };
+
+    const cleanPhone = (phoneNumber || "").replace(/\D/g, "");
+    if (cleanPhone && cleanPhone.length !== 10) {
+      toast.error("Please enter a valid 10-digit Bangladesh mobile number (e.g. 17XXXXXXXX)");
+      setIsSaving(false);
+      return;
+    }
 
     const nameToSave =
       fullName?.trim() ||

@@ -62,43 +62,20 @@ export default function CreateJobPage() {
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState("");
 
-  const [countriesList, setCountriesList] = useState([]);
   const [statesList, setStatesList] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
 
   useEffect(() => {
-    let ignore = false;
-    fetchCountries().then((data) => {
-      if (!ignore) setCountriesList(data);
+    fetchStates("BD").then((data) => {
+      setStatesList(data);
     });
-    return () => {
-      ignore = true;
-    };
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    if (countryCode) {
-      fetchStates(countryCode).then((data) => {
-        if (!ignore) setStatesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [countryCode]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (countryCode && stateCode) {
-      fetchCities(countryCode, stateCode).then((data) => {
-        if (!ignore) setCitiesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [countryCode, stateCode]);
+    fetchCities("BD", stateCode).then((data) => {
+      setCitiesList(data);
+    });
+  }, [stateCode]);
 
   useEffect(() => {
     const fetchTaxonomy = async () => {
@@ -337,63 +314,53 @@ export default function CreateJobPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className={labelClass}>Country</Label>
-                  <Select value={countryCode} onValueChange={(val) => {
-                    const c = countriesList.find((item) => item.isoCode === val);
-                    setCountryCode(val);
-                    setCountry(c?.name || val);
-                    setStateCode(""); setStateName(""); setCityName("");
-                  }}>
-                    <SelectTrigger className={selectTriggerClass}>
-                      <SelectValue placeholder="Select Country">
-                        {country || "Select Country"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border text-foreground">
-                      {countriesList.map((c) => (
-                        <SelectItem key={c.isoCode} value={c.isoCode}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-2 h-10 px-3 rounded-xl bg-muted/40 border border-border text-foreground text-sm font-medium">
+                    <span className="text-base">🇧🇩</span>
+                    <span>Bangladesh</span>
+                  </div>
                 </div>
-                {countryCode && (
-                  <div className="space-y-1.5">
-                    <Label className={labelClass}>State / Division</Label>
-                    <Select value={stateCode} onValueChange={(val) => {
+                <div className="space-y-1.5">
+                  <Label className={labelClass}>Division</Label>
+                  <Select
+                    value={stateCode}
+                    onValueChange={(val) => {
                       const s = statesList.find((item) => item.isoCode === val);
                       setStateCode(val);
                       setStateName(s?.name || val);
                       setCityName("");
-                    }}>
-                      <SelectTrigger className={selectTriggerClass}>
-                        <SelectValue placeholder="Select Division">
-                          {stateName || "Select Division"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border text-foreground">
-                        {statesList.map((s) => (
-                          <SelectItem key={s.isoCode} value={s.isoCode}>{s.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                {stateCode && countryCode && (
-                  <div className="space-y-1.5">
-                    <Label className={labelClass}>City</Label>
-                    <Select value={cityName} onValueChange={setCityName}>
-                      <SelectTrigger className={selectTriggerClass}>
-                        <SelectValue placeholder="Select City">
-                          {cityName || "Select City"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent className="bg-card border-border text-foreground">
-                        {citiesList.map((c) => (
-                          <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                    }}
+                  >
+                    <SelectTrigger className={selectTriggerClass}>
+                      <SelectValue placeholder="Select Division">
+                        {stateName || "Select Division"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      {statesList.map((s) => (
+                        <SelectItem key={s.isoCode} value={s.isoCode}>
+                          {s.name} {s.bnName ? `(${s.bnName})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className={labelClass}>District / City</Label>
+                  <Select value={cityName} onValueChange={setCityName}>
+                    <SelectTrigger className={selectTriggerClass}>
+                      <SelectValue placeholder={stateCode ? "Select District" : "Select Division first"}>
+                        {cityName || "Select District"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground max-h-60">
+                      {citiesList.map((c) => (
+                        <SelectItem key={c.name} value={c.name}>
+                          {c.name} {c.bnName ? `(${c.bnName})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="sm:col-span-2 space-y-1.5">
                   <Label className={labelClass}>Full Address (Optional)</Label>
                   <Input

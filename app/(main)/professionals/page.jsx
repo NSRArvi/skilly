@@ -28,48 +28,25 @@ export default function ProfessionalsPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState("all");
 
-  const [selectedCountry, setSelectedCountry] = useState("BD");
+  const [selectedCountry] = useState("BD");
   const [selectedState, setSelectedState] = useState("all");
   const [selectedCity, setSelectedCity] = useState("all");
   const [selectedVerified, setSelectedVerified] = useState("all");
 
-  const [countriesList, setCountriesList] = useState([]);
   const [statesList, setStatesList] = useState([]);
   const [citiesList, setCitiesList] = useState([]);
 
   useEffect(() => {
-    let ignore = false;
-    fetchCountries().then((data) => {
-      if (!ignore) setCountriesList(data);
+    fetchStates("BD").then((data) => {
+      setStatesList(data);
     });
-    return () => {
-      ignore = true;
-    };
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    if (selectedCountry && selectedCountry !== "all") {
-      fetchStates(selectedCountry).then((data) => {
-        if (!ignore) setStatesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [selectedCountry]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (selectedCountry && selectedCountry !== "all" && selectedState && selectedState !== "all") {
-      fetchCities(selectedCountry, selectedState).then((data) => {
-        if (!ignore) setCitiesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [selectedCountry, selectedState]);
+    fetchCities("BD", selectedState).then((data) => {
+      setCitiesList(data);
+    });
+  }, [selectedState]);
 
   const [sortBy, setSortBy] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
@@ -205,7 +182,6 @@ export default function ProfessionalsPage() {
   const activeFilterCount = [
     selectedCategory !== "all",
     selectedSubcategory !== "all",
-    selectedCountry !== "all" && selectedCountry !== "BD",
     selectedState !== "all",
     selectedCity !== "all",
     selectedVerified !== "all",
@@ -214,7 +190,6 @@ export default function ProfessionalsPage() {
   const clearAllFilters = () => {
     setSelectedCategory("all");
     setSelectedSubcategory("all");
-    setSelectedCountry("BD");
     setSelectedState("all");
     setSelectedCity("all");
     setSelectedVerified("all");
@@ -223,14 +198,14 @@ export default function ProfessionalsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-10 md:py-16">
+    <div className="min-h-screen bg-background py-10 md:py-16" suppressHydrationWarning>
       <Container>
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-                Find Experts
+                Find Professionals
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {!loading && `${professionals.length}${hasMore ? "+" : ""} professionals available`}
@@ -381,86 +356,52 @@ export default function ProfessionalsPage() {
                 <span>Location</span>
               </div>
 
-              <div className="w-[170px]">
+              {/* <div className="w-[170px]"> */}
                 <Select
-                  value={selectedCountry}
+                  value={selectedState}
                   onValueChange={(val) => {
-                    setSelectedCountry(val);
-                    setSelectedState("all");
+                    setSelectedState(val);
                     setSelectedCity("all");
-                    if (val === "all") {
-                      setStatesList([]);
-                      setCitiesList([]);
-                    }
                   }}
                 >
-                  <SelectTrigger className="h-8 rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                    <SelectValue placeholder="All Countries">
-                      {selectedCountry === "all" ? "All Countries" : (countriesList.find((c) => c.isoCode === selectedCountry)?.name || selectedCountry)}
+                  <SelectTrigger className="h-8 w-[170px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
+                    <SelectValue placeholder="All Divisions">
+                      {selectedState === "all"
+                        ? "All Divisions"
+                        : statesList.find((s) => s.isoCode === selectedState)?.name || selectedState}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="bg-card border-border text-foreground">
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {countriesList.map((c) => (
-                      <SelectItem key={c.isoCode} value={c.isoCode}>
-                        {c.name}
+                  <SelectContent className="bg-card border-border text-foreground p-2">
+                    <SelectItem value="all">All Divisions</SelectItem>
+                    {statesList.map((s) => (
+                      <SelectItem key={s.isoCode} value={s.isoCode}>
+                        {s.name} {s.bnName ? `(${s.bnName})` : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              {/* </div> */}
 
-              {selectedCountry !== "all" && (
-                <div className="w-[170px]">
-                  <Select
-                    value={selectedState}
-                    onValueChange={(val) => {
-                      setSelectedState(val);
-                      setSelectedCity("all");
-                      if (val === "all") {
-                        setCitiesList([]);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-8 rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                      <SelectValue placeholder="All Divisions">
-                        {selectedState === "all" ? "All Divisions" : (statesList.find((s) => s.isoCode === selectedState)?.name || selectedState)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border text-foreground">
-                      <SelectItem value="all">All Divisions</SelectItem>
-                      {statesList.map((s) => (
-                        <SelectItem key={s.isoCode} value={s.isoCode}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {selectedState !== "all" && selectedCountry !== "all" && (
-                <div className="w-[170px]">
-                  <Select
-                    value={selectedCity}
-                    onValueChange={setSelectedCity}
-                  >
-                    <SelectTrigger className="h-8 rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                      <SelectValue placeholder="All Cities">
-                        {selectedCity === "all" ? "All Cities" : selectedCity}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border text-foreground">
-                      <SelectItem value="all">All Cities</SelectItem>
-                      {citiesList.map((c) => (
-                        <SelectItem key={c.name} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              {/* <div className="w-[170px]"> */}
+                <Select
+                  value={selectedCity}
+                  onValueChange={setSelectedCity}
+                >
+                  <SelectTrigger className="h-8 w-[170px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
+                    <SelectValue placeholder="All Districts">
+                      {selectedCity === "all" ? "All Districts" : selectedCity}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border text-foreground max-h-60 p-2">
+                    <SelectItem value="all">All Districts</SelectItem>
+                    {citiesList.map((c) => (
+                      <SelectItem key={c.name} value={c.name}>
+                        {c.name} {c.bnName ? `(${c.bnName})` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              {/* </div> */}
             </div>
           </div>
         </div>

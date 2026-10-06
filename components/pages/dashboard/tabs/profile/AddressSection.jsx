@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
-import { fetchCountries, fetchStates, fetchCities } from "@/lib/locations";
+import { fetchStates, fetchCities } from "@/lib/locations";
 
 export default function AddressSection({
   presentAddress,
@@ -21,69 +21,29 @@ export default function AddressSection({
   isSameAddress,
   setIsSameAddress,
 }) {
-  const [countriesList, setCountriesList] = useState([]);
   const [presentStatesList, setPresentStatesList] = useState([]);
   const [presentCitiesList, setPresentCitiesList] = useState([]);
   const [permanentStatesList, setPermanentStatesList] = useState([]);
   const [permanentCitiesList, setPermanentCitiesList] = useState([]);
 
   useEffect(() => {
-    let ignore = false;
-    fetchCountries().then((data) => {
-      if (!ignore) setCountriesList(data);
+    fetchStates("BD").then((data) => {
+      setPresentStatesList(data);
+      setPermanentStatesList(data);
     });
-    return () => {
-      ignore = true;
-    };
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    if (presentAddress.countryCode) {
-      fetchStates(presentAddress.countryCode).then((data) => {
-        if (!ignore) setPresentStatesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [presentAddress.countryCode]);
+    fetchCities("BD", presentAddress.stateCode || presentAddress.state).then((data) => {
+      setPresentCitiesList(data);
+    });
+  }, [presentAddress.stateCode, presentAddress.state]);
 
   useEffect(() => {
-    let ignore = false;
-    if (presentAddress.countryCode && presentAddress.stateCode) {
-      fetchCities(presentAddress.countryCode, presentAddress.stateCode).then((data) => {
-        if (!ignore) setPresentCitiesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [presentAddress.countryCode, presentAddress.stateCode]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (permanentAddress.countryCode) {
-      fetchStates(permanentAddress.countryCode).then((data) => {
-        if (!ignore) setPermanentStatesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [permanentAddress.countryCode]);
-
-  useEffect(() => {
-    let ignore = false;
-    if (permanentAddress.countryCode && permanentAddress.stateCode) {
-      fetchCities(permanentAddress.countryCode, permanentAddress.stateCode).then((data) => {
-        if (!ignore) setPermanentCitiesList(data);
-      });
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [permanentAddress.countryCode, permanentAddress.stateCode]);
+    fetchCities("BD", permanentAddress.stateCode || permanentAddress.state).then((data) => {
+      setPermanentCitiesList(data);
+    });
+  }, [permanentAddress.stateCode, permanentAddress.state]);
 
   return (
     <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
@@ -96,7 +56,7 @@ export default function AddressSection({
             Address Information
           </h2>
           <p className="text-xs md:text-sm text-muted-foreground">
-            Your physical and billing locations
+            Your physical and billing locations in Bangladesh
           </p>
         </div>
       </div>
@@ -108,64 +68,44 @@ export default function AddressSection({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground">
+            <Label className="text-xs font-semibold text-foreground">
               Country
             </Label>
-            <Select
-              value={presentAddress.countryCode}
-              onValueChange={(val) => {
-                const countryData = countriesList.find((c) => c.isoCode === val);
-                setPresentAddress({
-                  ...presentAddress,
-                  countryCode: val,
-                  country: countryData?.name || val,
-                  stateCode: "",
-                  state: "",
-                  city: "",
-                });
-              }}
-            >
-              <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                <SelectValue placeholder="Select Country">
-                  {presentAddress.country || "Select Country"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                {countriesList.map((c) => (
-                  <SelectItem key={c.isoCode} value={c.isoCode}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2 h-10 px-3 rounded-xl bg-muted/40 border border-border text-foreground text-sm font-medium">
+              <span className="text-sm">🇧🇩</span>
+              <span>Bangladesh</span>
+            </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground">
-              State / Division
+            <Label className="text-xs font-semibold text-foreground">
+              Division
             </Label>
             <Select
-              value={presentAddress.stateCode}
-              disabled={!presentAddress.countryCode}
+              value={presentAddress.stateCode || presentAddress.state}
               onValueChange={(val) => {
-                const stateData = presentStatesList.find((s) => s.isoCode === val);
+                const stateData = presentStatesList.find(
+                  (s) => s.isoCode === val || s.name === val
+                );
                 setPresentAddress({
                   ...presentAddress,
-                  stateCode: val,
+                  countryCode: "BD",
+                  country: "Bangladesh",
+                  stateCode: stateData?.isoCode || val,
                   state: stateData?.name || val,
                   city: "",
                 });
               }}
             >
-              <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                <SelectValue placeholder="Select State/Division">
-                  {presentAddress.state || "Select State/Division"}
+              <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm">
+                <SelectValue placeholder="Select Division">
+                  {presentAddress.state || "Select Division"}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-card border-border text-foreground">
                 {presentStatesList.map((s) => (
                   <SelectItem key={s.isoCode} value={s.isoCode}>
-                    {s.name}
+                    {s.name} {s.bnName ? `(${s.bnName})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -173,12 +113,11 @@ export default function AddressSection({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground">
-              City
+            <Label className="text-xs font-semibold text-foreground">
+              District / City
             </Label>
             <Select
               value={presentAddress.city}
-              disabled={!presentAddress.stateCode}
               onValueChange={(val) => {
                 setPresentAddress({
                   ...presentAddress,
@@ -186,15 +125,15 @@ export default function AddressSection({
                 });
               }}
             >
-              <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                <SelectValue placeholder="Select City">
-                  {presentAddress.city || "Select City"}
+              <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm">
+                <SelectValue placeholder="Select District">
+                  {presentAddress.city || "Select District"}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
+              <SelectContent className="bg-card border-border text-foreground max-h-60">
                 {presentCitiesList.map((c) => (
                   <SelectItem key={c.name} value={c.name}>
-                    {c.name}
+                    {c.name} {c.bnName ? `(${c.bnName})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -202,11 +141,11 @@ export default function AddressSection({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-muted-foreground">
+            <Label className="text-xs font-semibold text-foreground">
               Zip / Postal Code
             </Label>
             <Input
-              value={presentAddress.zipcode}
+              value={presentAddress.zipcode || ""}
               onChange={(e) =>
                 setPresentAddress({
                   ...presentAddress,
@@ -214,16 +153,16 @@ export default function AddressSection({
                 })
               }
               placeholder="E.g. 1207"
-              className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
+              className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm"
             />
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">
-            <Label className="text-xs font-semibold text-muted-foreground">
+            <Label className="text-xs font-semibold text-foreground">
               Full Street Address
             </Label>
             <Input
-              value={presentAddress.fullAddress}
+              value={presentAddress.fullAddress || ""}
               onChange={(e) =>
                 setPresentAddress({
                   ...presentAddress,
@@ -231,7 +170,7 @@ export default function AddressSection({
                 })
               }
               placeholder="E.g. House 12, Road 4, Sector 7, Uttara"
-              className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
+              className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm"
             />
           </div>
         </div>
@@ -257,64 +196,44 @@ export default function AddressSection({
         {!isSameAddress && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">
+              <Label className="text-xs font-semibold text-foreground">
                 Country
               </Label>
-              <Select
-                value={permanentAddress.countryCode}
-                onValueChange={(val) => {
-                  const countryData = countriesList.find((c) => c.isoCode === val);
-                  setPermanentAddress({
-                    ...permanentAddress,
-                    countryCode: val,
-                    country: countryData?.name || val,
-                    stateCode: "",
-                    state: "",
-                    city: "",
-                  });
-                }}
-              >
-                <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                  <SelectValue placeholder="Select Country">
-                    {permanentAddress.country || "Select Country"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
-                  {countriesList.map((c) => (
-                    <SelectItem key={c.isoCode} value={c.isoCode}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 h-10 px-3 rounded-xl bg-muted/40 border border-border text-foreground text-sm font-medium">
+                <span className="text-sm">🇧🇩</span>
+                <span>Bangladesh</span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">
-                State / Division
+              <Label className="text-xs font-semibold text-foreground">
+                Division
               </Label>
               <Select
-                value={permanentAddress.stateCode}
-                disabled={!permanentAddress.countryCode}
+                value={permanentAddress.stateCode || permanentAddress.state}
                 onValueChange={(val) => {
-                  const stateData = permanentStatesList.find((s) => s.isoCode === val);
+                  const stateData = permanentStatesList.find(
+                    (s) => s.isoCode === val || s.name === val
+                  );
                   setPermanentAddress({
                     ...permanentAddress,
-                    stateCode: val,
+                    countryCode: "BD",
+                    country: "Bangladesh",
+                    stateCode: stateData?.isoCode || val,
                     state: stateData?.name || val,
                     city: "",
                   });
                 }}
               >
-                <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                  <SelectValue placeholder="Select State/Division">
-                    {permanentAddress.state || "Select State/Division"}
+                <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm">
+                  <SelectValue placeholder="Select Division">
+                    {permanentAddress.state || "Select Division"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border text-foreground">
                   {permanentStatesList.map((s) => (
                     <SelectItem key={s.isoCode} value={s.isoCode}>
-                      {s.name}
+                      {s.name} {s.bnName ? `(${s.bnName})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -322,12 +241,11 @@ export default function AddressSection({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">
-                City
+              <Label className="text-xs font-semibold text-foreground">
+                District / City
               </Label>
               <Select
                 value={permanentAddress.city}
-                disabled={!permanentAddress.stateCode}
                 onValueChange={(val) => {
                   setPermanentAddress({
                     ...permanentAddress,
@@ -335,15 +253,15 @@ export default function AddressSection({
                   });
                 }}
               >
-                <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs">
-                  <SelectValue placeholder="Select City">
-                    {permanentAddress.city || "Select City"}
+                <SelectTrigger className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm">
+                  <SelectValue placeholder="Select District">
+                    {permanentAddress.city || "Select District"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
+                <SelectContent className="bg-card border-border text-foreground max-h-60">
                   {permanentCitiesList.map((c) => (
                     <SelectItem key={c.name} value={c.name}>
-                      {c.name}
+                      {c.name} {c.bnName ? `(${c.bnName})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -351,11 +269,11 @@ export default function AddressSection({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">
+              <Label className="text-xs font-semibold text-foreground">
                 Zip / Postal Code
               </Label>
               <Input
-                value={permanentAddress.zipcode}
+                value={permanentAddress.zipcode || ""}
                 onChange={(e) =>
                   setPermanentAddress({
                     ...permanentAddress,
@@ -363,16 +281,16 @@ export default function AddressSection({
                   })
                 }
                 placeholder="E.g. 1207"
-                className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
+                className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm"
               />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-xs font-semibold text-muted-foreground">
+              <Label className="text-xs font-semibold text-foreground">
                 Full Street Address
               </Label>
               <Input
-                value={permanentAddress.fullAddress}
+                value={permanentAddress.fullAddress || ""}
                 onChange={(e) =>
                   setPermanentAddress({
                     ...permanentAddress,
@@ -380,7 +298,7 @@ export default function AddressSection({
                   })
                 }
                 placeholder="Permanent street address"
-                className="bg-background/50 border-border text-foreground h-10 rounded-xl text-xs"
+                className="bg-background/50 border-border text-foreground h-10 rounded-xl text-sm"
               />
             </div>
           </div>

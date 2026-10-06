@@ -72,6 +72,7 @@ export default function RootLayout({
     >
       <body
         className={`${jakartaSans.className} font-sans min-h-full flex flex-col`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

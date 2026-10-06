@@ -50,9 +50,6 @@ export default function BasicInfoSection({
             Your core public identity across the talent ecosystem
           </p>
         </div>
-        <span className="px-2 py-0.5 rounded text-[11px] font-mono tracking-widest font-semibold border border-primary/40 text-primary bg-primary/5 uppercase">
-          SECTION 01
-        </span>
       </div>
 
       <div className="space-y-4">
@@ -66,7 +63,7 @@ export default function BasicInfoSection({
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter your full name"
-              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl"
+              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
             />
           </div>
 
@@ -75,7 +72,7 @@ export default function BasicInfoSection({
               Gender / Sex
             </Label>
             <Select value={gender} onValueChange={setGender}>
-              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
+              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm">
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border text-foreground">
@@ -98,7 +95,7 @@ export default function BasicInfoSection({
               value={profession}
               onChange={(e) => setProfession(e.target.value)}
               placeholder="E.g. Senior Frontend Developer"
-              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl"
+              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
             />
           </div>
 
@@ -110,7 +107,7 @@ export default function BasicInfoSection({
               type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
-              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl"
+              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
             />
           </div>
         </div>
@@ -128,7 +125,7 @@ export default function BasicInfoSection({
                 setSelectedSubcategory("");
               }}
             >
-              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
+              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm">
                 <SelectValue placeholder="Select a category">
                   {categories.find((c) => c.id === selectedCategory)?.name ||
                     "Select a category"}
@@ -153,7 +150,7 @@ export default function BasicInfoSection({
               onValueChange={setSelectedSubcategory}
               disabled={!selectedCategory}
             >
-              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl">
+              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm">
                 <SelectValue placeholder="Select a subcategory">
                   {subcategories.find((s) => s.id === selectedSubcategory)
                     ?.name || "Select a subcategory"}
@@ -183,7 +180,7 @@ export default function BasicInfoSection({
               value={hourlyRate}
               onChange={(e) => setHourlyRate(e.target.value)}
               placeholder="E.g. 50"
-              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl"
+              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
             />
           </div>
 
@@ -196,7 +193,7 @@ export default function BasicInfoSection({
               value={dailyRate}
               onChange={(e) => setDailyRate(e.target.value)}
               placeholder="E.g. 400"
-              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl"
+              className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
             />
           </div>
         </div>
@@ -221,26 +218,26 @@ export default function BasicInfoSection({
               )
             ) : null}
           </div>
-          <div className="flex gap-2">
-            <Select value={phoneCode} onValueChange={setPhoneCode}>
-              <SelectTrigger className="w-[140px] bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-xs font-medium">
-                <SelectValue placeholder="Code" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                <SelectItem value="+880">🇧🇩 +880 (BD)</SelectItem>
-                <SelectItem value="+1">🇺🇸 +1 (US)</SelectItem>
-                <SelectItem value="+44">🇬🇧 +44 (UK)</SelectItem>
-                <SelectItem value="+91">🇮🇳 +91 (IN)</SelectItem>
-                <SelectItem value="+49">🇩🇪 +49 (DE)</SelectItem>
-                <SelectItem value="+61">🇦🇺 +61 (AU)</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex rounded-xl border border-border bg-background/50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary overflow-hidden transition-all h-10">
+            <div className="flex items-center gap-1.5 px-3 bg-muted/40 border-r border-border text-foreground font-mono text-xs font-semibold select-none shrink-0">
+              <span className="text-sm">🇧🇩</span>
+              <span>+880</span>
+            </div>
             <Input
               type="tel"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="17XXXXXXXX"
-              className="flex-1 bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm"
+              maxLength={10}
+              onChange={(e) => {
+                let val = e.target.value.replace(/\D/g, "");
+                // If user accidentally types leading 0 or +880, strip it to keep 10 digits
+                if (val.startsWith("880")) val = val.slice(3);
+                if (val.startsWith("0")) val = val.slice(1);
+                val = val.slice(0, 10);
+                setPhoneNumber(val);
+                if (phoneCode !== "+880") setPhoneCode("+880");
+              }}
+              placeholder="1XXXXXXXXX (10 digits)"
+              className="flex-1 h-full border-0 bg-transparent rounded-none focus-visible:ring-0 focus-visible:border-0 px-3 text-foreground text-sm font-mono tracking-wide"
             />
           </div>
         </div>

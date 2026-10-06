@@ -20,6 +20,7 @@ import {
   LogOut,
   X,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "../../lib/client";
 import { toast } from "sonner";
@@ -64,6 +65,12 @@ export default function Sidebar({ mobileOpen, setMobileOpen }) {
           label: "Jobs",
           icon: Briefcase,
           href: "/jobs",
+        },
+        {
+          id: "Services",
+          label: "Services",
+          icon: Sparkles,
+          href: "/services",
         },
         {
           id: "Community",

@@ -3,41 +3,41 @@ import { GET } from "@/app/api/locations/route";
 import { NextRequest } from "next/server";
 
 describe("Locations API Route (/api/locations)", () => {
-  it("returns all countries with isoCode, name, and flag", async () => {
+  it("returns Bangladesh as fixed country with isoCode, name, and flag", async () => {
     const req = new NextRequest("http://localhost:3000/api/locations?type=countries");
     const res = await GET(req);
 
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(100);
+    expect(data.length).toBe(1);
 
     const bangladesh = data.find((c: { isoCode: string }) => c.isoCode === "BD");
     expect(bangladesh).toBeDefined();
     expect(bangladesh.name).toBe("Bangladesh");
   });
 
-  it("returns states for a valid country", async () => {
+  it("returns 8 divisions of Bangladesh for states", async () => {
     const req = new NextRequest("http://localhost:3000/api/locations?type=states&country=BD");
     const res = await GET(req);
 
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(0);
+    expect(data.length).toBe(8);
 
-    const dhakaDivision = data.find((s: { name: string }) => s.name.includes("Dhaka"));
+    const dhakaDivision = data.find((s: { name: string }) => s.name === "Dhaka");
     expect(dhakaDivision).toBeDefined();
   });
 
-  it("returns cities for a valid country and state", async () => {
-    const req = new NextRequest("http://localhost:3000/api/locations?type=cities&country=BD&state=13");
+  it("returns districts for a valid state/division", async () => {
+    const req = new NextRequest("http://localhost:3000/api/locations?type=cities&country=BD&state=DHAKA");
     const res = await GET(req);
 
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(Array.isArray(data)).toBe(true);
-    expect(data.length).toBeGreaterThan(0);
+    expect(data.length).toBe(13); // Dhaka has 13 districts
   });
 
   it("returns 400 for invalid query parameters", async () => {

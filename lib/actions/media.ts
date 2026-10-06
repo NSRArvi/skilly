@@ -131,6 +131,67 @@ export async function uploadProfileMedia(formData: FormData) {
 }
 
 /**
+ * Uploads a service cover/card image to the public 'avatars' (or service media) bucket.
+ */
+export async function uploadServiceImage(formData: FormData) {
+  try {
+    const userClient = await createClient();
+    const {
+      data: { user },
+    } = await userClient.auth.getUser();
+
+    if (!user) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return { success: false, error: "No image file provided." };
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      return { success: false, error: "File size exceeds 10MB limit." };
+    }
+
+    const allowedMime = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedMime.includes(file.type)) {
+      return {
+        success: false,
+        error: "Only JPG, PNG, WEBP, and GIF images are allowed.",
+      };
+    }
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const cleanExt = ext.replace(/[^a-zA-Z0-9]/g, "");
+    const fileName = `service-${user.id}-${Date.now()}.${cleanExt}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const supabase = getAdminSupabase();
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(fileName, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return { success: false, error: "Failed to upload service image to storage." };
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+    return { success: true, publicUrl };
+  } catch {
+    return { success: false, error: "An unexpected error occurred during image upload." };
+  }
+}
+
+
+/**
  * Uploads a KYC identification document to the private 'kyc-documents' bucket.
  */
 export async function uploadKycDocument(formData: FormData) {

@@ -529,11 +529,13 @@ export default function JobsAdmin() {
                         <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
                         {[
                           selectedJob.city,
-                          selectedJob.state,
-                          selectedJob.country,
+                          selectedJob.state && selectedJob.state !== selectedJob.city
+                            ? selectedJob.state
+                            : null,
+                          selectedJob.country || "Bangladesh",
                         ]
                           .filter(Boolean)
-                          .join(", ") || "N/A"}
+                          .join(", ") || "Bangladesh"}
                       </span>
                     </div>
                     <div>

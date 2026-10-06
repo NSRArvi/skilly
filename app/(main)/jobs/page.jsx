@@ -326,8 +326,8 @@ export default function JobsPage() {
               const locationParts = [
                 job.full_address,
                 job.city,
-                job.state,
-                job.country,
+                job.state && job.state !== job.city ? job.state : null,
+                job.country || "Bangladesh",
               ].filter(Boolean);
               const locationStr =
                 locationParts.length > 0
