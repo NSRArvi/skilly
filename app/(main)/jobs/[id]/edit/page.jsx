@@ -23,6 +23,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+import SearchableSelect from "@/components/shared/SearchableSelect";
 import { fetchCountries, fetchStates, fetchCities } from "@/lib/locations";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
@@ -294,33 +295,29 @@ export default function EditJobPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className={labelClass}>Category</Label>
-                  <Select value={categoryId} onValueChange={(val) => { setCategoryId(val); setSubcategoryId(""); }}>
-                    <SelectTrigger className={selectTriggerClass}>
-                      <SelectValue placeholder="Select category">
-                        {categories.find(c => c.id === categoryId)?.name || "Select category"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border text-foreground">
-                      {categories.map(cat => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={categoryId}
+                    onChange={(val) => {
+                      setCategoryId(val);
+                      setSubcategoryId("");
+                    }}
+                    items={categories}
+                    placeholder="Select category"
+                    searchPlaceholder="Search categories..."
+                    emptyMessage="No category found"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className={labelClass}>Subcategory</Label>
-                  <Select value={subcategoryId} onValueChange={setSubcategoryId} disabled={!categoryId}>
-                    <SelectTrigger className={selectTriggerClass}>
-                      <SelectValue placeholder="Select subcategory">
-                        {subcategories.find(s => s.id === subcategoryId)?.name || "Select subcategory"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-border text-foreground">
-                      {subcategories.filter(s => s.category_id === categoryId).map(sub => (
-                        <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    value={subcategoryId}
+                    onChange={setSubcategoryId}
+                    items={subcategories.filter((s) => s.category_id === categoryId)}
+                    placeholder="Select subcategory"
+                    searchPlaceholder="Search subcategories..."
+                    emptyMessage="No subcategory found"
+                    disabled={!categoryId}
+                  />
                 </div>
               </div>
 

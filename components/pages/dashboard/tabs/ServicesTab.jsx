@@ -38,6 +38,7 @@ import {
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { createClient } from "../../../../lib/client";
 import { uploadServiceImage } from "@/lib/actions/media";
+import SearchableSelect from "@/components/shared/SearchableSelect";
 import { fetchStates, fetchCities } from "@/lib/locations";
 import { toast } from "sonner";
 
@@ -536,52 +537,30 @@ export default function ServicesTab({ userId }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold text-foreground">Category</Label>
-                <Select
+                <SearchableSelect
                   value={selectedCategory}
-                  onValueChange={(val) => {
+                  onChange={(val) => {
                     setSelectedCategory(val);
                     setSelectedSubcategory("");
                   }}
-                >
-                  <SelectTrigger className="h-10 text-sm rounded-xl">
-                    <SelectValue placeholder="Select a category">
-                      {categories.find((c) => c.id === selectedCategory)?.name ||
-                        "Select a category"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  items={categories}
+                  placeholder="Select a category"
+                  searchPlaceholder="Search categories..."
+                  emptyMessage="No category found"
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold text-foreground">Subcategory</Label>
-                <Select
+                <SearchableSelect
                   value={selectedSubcategory}
-                  onValueChange={setSelectedSubcategory}
+                  onChange={setSelectedSubcategory}
+                  items={subcategories.filter((sub) => sub.category_id === selectedCategory)}
+                  placeholder="Select a subcategory"
+                  searchPlaceholder="Search subcategories..."
+                  emptyMessage="No subcategory found"
                   disabled={!selectedCategory}
-                >
-                  <SelectTrigger className="h-10 text-sm rounded-xl">
-                    <SelectValue placeholder="Select a subcategory">
-                      {subcategories.find((s) => s.id === selectedSubcategory)?.name ||
-                        "Select a subcategory"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    {subcategories
-                      .filter((sub) => sub.category_id === selectedCategory)
-                      .map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
             </div>
 

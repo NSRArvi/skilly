@@ -21,6 +21,7 @@ const tabs = [
   { name: "Jobs", href: "/admin/jobs", icon: Briefcase },
   { name: "Posts", href: "/admin/community_posts", icon: MessageSquare },
   { name: "Categories", href: "/admin/categories", icon: Tag },
+  { name: "Skills", href: "/admin/skills", icon: Settings },
   { name: "Support", href: "/admin/support_messages", icon: LifeBuoy },
 ];
 

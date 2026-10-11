@@ -20,6 +20,8 @@ import {
   Briefcase,
   Sparkles,
   QrCode,
+  Wrench,
+  Timer,
 } from "lucide-react";
 import ProfileTab from "./tabs/ProfileTab";
 import DigitalIdTab from "./tabs/DigitalIdTab";
@@ -70,11 +72,11 @@ export default function Dashboard() {
         let defaultAvatar =
           user.user_metadata?.picture || user.user_metadata?.avatar_url || null;
 
-        // Fetch from professionals table with all real columns
+        // Fetch from professionals table with category and subcategory joins
         const { data: profDataArray, error } = await supabase
           .from("professionals")
           .select(
-            "id, full_name, profession, bio, rating_message, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url, created_at, present_address, phone_number, phone_code",
+            "id, full_name, profession, bio, rating_message, followers_count, following_count, ratings_count, orders_count, is_verified, avatar_url, cover_image_url, created_at, present_address, phone_number, phone_code, category_id, subcategory_id, categories(name), subcategories(name)",
           )
           .eq("user_id", user.id)
           .limit(1);
@@ -131,6 +133,9 @@ export default function Dashboard() {
             name: profData.full_name || defaultName,
             email: user.email || "",
             profession: profData.profession || "Professional",
+            category: profData.categories?.name || "",
+            subcategory: profData.subcategories?.name || "",
+            presentAddress: profData.present_address || null,
             headline:
               profData.rating_message || profData.bio || "Update your profile",
             followers: followersCount || 0,
@@ -455,6 +460,7 @@ export default function Dashboard() {
                 value="orders"
                 className="rounded-xl px-4 py-2 text-xs md:text-sm font-medium transition-all data-[state=active]:bg-primary/10 data-[state=active]:text-primary text-muted-foreground hover:text-foreground flex items-center gap-2"
               >
+                <Timer className="w-4 h-4" />
                 Orders
               </TabsTrigger>
               <TabsTrigger

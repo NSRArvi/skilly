@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CheckCircle2, Clock } from "lucide-react";
+import SearchableSelect from "@/components/shared/SearchableSelect";
 
 export default function BasicInfoSection({
   fullName,
@@ -118,54 +119,32 @@ export default function BasicInfoSection({
             <Label className="text-xs font-semibold text-foreground">
               Category
             </Label>
-            <Select
+            <SearchableSelect
               value={selectedCategory}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 setSelectedCategory(val);
                 setSelectedSubcategory("");
               }}
-            >
-              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm">
-                <SelectValue placeholder="Select a category">
-                  {categories.find((c) => c.id === selectedCategory)?.name ||
-                    "Select a category"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              items={categories}
+              placeholder="Select a category"
+              searchPlaceholder="Search categories..."
+              emptyMessage="No category found"
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-foreground">
               Subcategory
             </Label>
-            <Select
+            <SearchableSelect
               value={selectedSubcategory}
-              onValueChange={setSelectedSubcategory}
+              onChange={setSelectedSubcategory}
+              items={subcategories.filter((sub) => sub.category_id === selectedCategory)}
+              placeholder="Select a subcategory"
+              searchPlaceholder="Search subcategories..."
+              emptyMessage="No subcategory found"
               disabled={!selectedCategory}
-            >
-              <SelectTrigger className="bg-background/50 border-border text-foreground focus:border-primary focus:ring-1 focus:ring-primary h-10 rounded-xl text-sm">
-                <SelectValue placeholder="Select a subcategory">
-                  {subcategories.find((s) => s.id === selectedSubcategory)
-                    ?.name || "Select a subcategory"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                {subcategories
-                  .filter((sub) => sub.category_id === selectedCategory)
-                  .map((sub) => (
-                    <SelectItem key={sub.id} value={sub.id}>
-                      {sub.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
         </div>
 

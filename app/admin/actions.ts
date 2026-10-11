@@ -285,6 +285,42 @@ export async function deleteSubcategoryAction(id: string) {
   }
 }
 
+export async function createSkill(data: Record<string, unknown>) {
+  try {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+    const { data: result, error } = await supabase.from("skills").insert([data]).select().single();
+    if (error) return { success: false, error: error.message || "Database error occurred." };
+    return { success: true, data: result };
+  } catch {
+    return { success: false, error: "Unauthorized" };
+  }
+}
+
+export async function updateSkill(id: string, data: Record<string, unknown>) {
+  try {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+    const { error } = await supabase.from("skills").update(data).eq("id", id);
+    if (error) return { success: false, error: error.message || "Database error occurred." };
+    return { success: true };
+  } catch {
+    return { success: false, error: "Unauthorized" };
+  }
+}
+
+export async function deleteSkillAction(id: string) {
+  try {
+    await requireAdmin();
+    const supabase = getAdminSupabase();
+    const { error } = await supabase.from("skills").delete().eq("id", id);
+    if (error) return { success: false, error: error.message || "Database error occurred." };
+    return { success: true };
+  } catch {
+    return { success: false, error: "Unauthorized" };
+  }
+}
+
 function extractStoragePath(pathOrUrl: string, bucket = "kyc-documents"): string {
   if (!pathOrUrl) return "";
   let trimmed = pathOrUrl.trim().split("?")[0];

@@ -62,9 +62,8 @@ export default function ProfileTab({ onProfileUpdate }) {
   });
   const [isSameAddress, setIsSameAddress] = useState(false);
 
-  // 3. Skills & Categories States
+  // 3. Skills & Languages States
   const [skills, setSkills] = useState([]);
-  const [skillsFor, setSkillsFor] = useState([]);
   const [languages, setLanguages] = useState([]);
 
   // 4. Experience, Education & Courses
@@ -112,7 +111,9 @@ export default function ProfileTab({ onProfileUpdate }) {
         if (profData) {
           setFullName(profData.full_name || defaultName);
           setProfession(profData.profession || "");
-          setHourlyRate(profData.hourly_rate ? String(profData.hourly_rate) : "");
+          setHourlyRate(
+            profData.hourly_rate ? String(profData.hourly_rate) : "",
+          );
           setDailyRate(profData.daily_rate ? String(profData.daily_rate) : "");
           setDateOfBirth(profData.date_of_birth || "");
           setGender(profData.gender || "prefer-not");
@@ -162,10 +163,12 @@ export default function ProfileTab({ onProfileUpdate }) {
           }
 
           if (Array.isArray(profData.skills)) setSkills(profData.skills);
-          if (Array.isArray(profData.skills_for)) setSkillsFor(profData.skills_for);
-          if (Array.isArray(profData.languages)) setLanguages(profData.languages);
-          if (Array.isArray(profData.experience)) setExperience(profData.experience);
-          if (Array.isArray(profData.education)) setEducation(profData.education);
+          if (Array.isArray(profData.languages))
+            setLanguages(profData.languages);
+          if (Array.isArray(profData.experience))
+            setExperience(profData.experience);
+          if (Array.isArray(profData.education))
+            setEducation(profData.education);
           if (Array.isArray(profData.courses)) setCourses(profData.courses);
 
           setSocialLinkedin(profData.social_linkedin || "");
@@ -173,7 +176,7 @@ export default function ProfileTab({ onProfileUpdate }) {
           setSocialTwitter(profData.social_twitter || "");
           setIdType(profData.id_type || "nid");
           const verifiedStatus = Boolean(
-            profData.is_verified ?? profData.is_verify ?? false
+            profData.is_verified ?? profData.is_verify ?? false,
           );
           setIsVerified(verifiedStatus);
 
@@ -248,7 +251,9 @@ export default function ProfileTab({ onProfileUpdate }) {
 
     const cleanPhone = (phoneNumber || "").replace(/\D/g, "");
     if (cleanPhone && cleanPhone.length !== 10) {
-      toast.error("Please enter a valid 10-digit Bangladesh mobile number (e.g. 17XXXXXXXX)");
+      toast.error(
+        "Please enter a valid 10-digit Bangladesh mobile number (e.g. 17XXXXXXXX)",
+      );
       setIsSaving(false);
       return;
     }
@@ -278,7 +283,6 @@ export default function ProfileTab({ onProfileUpdate }) {
       present_address: updatedPresentAddress,
       permanent_address: isSameAddress ? presentAddress : permanentAddress,
       skills: skills,
-      skills_for: skillsFor,
       languages: languages,
       experience: experience,
       education: education,
@@ -367,6 +371,20 @@ export default function ProfileTab({ onProfileUpdate }) {
             setBioTagline={setBioTagline}
           />
 
+          <SocialLinksSection
+            socialLinkedin={socialLinkedin}
+            setSocialLinkedin={setSocialLinkedin}
+            socialGithub={socialGithub}
+            setSocialGithub={setSocialGithub}
+            socialTwitter={socialTwitter}
+            setSocialTwitter={setSocialTwitter}
+            socialPortfolio={socialPortfolio}
+            setSocialPortfolio={setSocialPortfolio}
+            socialWhatsapp={socialWhatsapp}
+            setSocialWhatsapp={setSocialWhatsapp}
+            socialDiscord={socialDiscord}
+            setSocialDiscord={setSocialDiscord}
+          />
           <AddressSection
             presentAddress={presentAddress}
             setPresentAddress={setPresentAddress}
@@ -381,10 +399,10 @@ export default function ProfileTab({ onProfileUpdate }) {
           <SkillsSection
             skills={skills}
             setSkills={setSkills}
-            skillsFor={skillsFor}
-            setSkillsFor={setSkillsFor}
             languages={languages}
             setLanguages={setLanguages}
+            selectedCategory={selectedCategory}
+            selectedSubcategory={selectedSubcategory}
           />
 
           <ExperienceSection
@@ -397,21 +415,6 @@ export default function ProfileTab({ onProfileUpdate }) {
             setEducation={setEducation}
             courses={courses}
             setCourses={setCourses}
-          />
-
-          <SocialLinksSection
-            socialLinkedin={socialLinkedin}
-            setSocialLinkedin={setSocialLinkedin}
-            socialGithub={socialGithub}
-            setSocialGithub={setSocialGithub}
-            socialTwitter={socialTwitter}
-            setSocialTwitter={setSocialTwitter}
-            socialPortfolio={socialPortfolio}
-            setSocialPortfolio={setSocialPortfolio}
-            socialWhatsapp={socialWhatsapp}
-            setSocialWhatsapp={setSocialWhatsapp}
-            socialDiscord={socialDiscord}
-            setSocialDiscord={setSocialDiscord}
           />
         </div>
 
