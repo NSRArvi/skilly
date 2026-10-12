@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Container from "@/components/shared/Container";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -36,6 +35,7 @@ import {
   Loader2,
   User,
   ShoppingBag,
+  ArrowUpDown,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,6 +43,7 @@ import { createClient } from "@/lib/client";
 import { fetchStates, fetchCities } from "@/lib/locations";
 import { useAuthModal } from "@/components/providers/AuthModalProvider";
 import { toast } from "sonner";
+import CommonTaxonomyLocationFilter from "@/components/shared/CommonTaxonomyLocationFilter";
 
 export default function ServicesPage() {
   const { requireAuth } = useAuthModal();
@@ -287,14 +288,6 @@ export default function ServicesPage() {
         <div className="space-y-4 mb-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                  <Sparkles className="w-5 h-5" />
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-primary">
-                  Explore Services & Packages
-                </span>
-              </div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
                 Hire Verified Solutions
               </h1>
@@ -312,44 +305,38 @@ export default function ServicesPage() {
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="bg-card border border-border/80 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+          <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
             {/* Top row: Search input & Sorting */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <div className="md:col-span-8 space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Search className="w-3.5 h-3.5 text-primary" />
-                  Search Services
-                </Label>
-                <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Search by title, deliverables, tags (e.g. Next.js, SEO, Logo design)..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 h-10 text-sm rounded-xl"
-                  />
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+              <div className="md:col-span-8 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search by title, deliverables, tags (e.g. Next.js, SEO, Logo design)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-10 pl-10 pr-9 rounded-xl bg-background/60 hover:bg-background border border-border text-foreground text-xs md:text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
-              <div className="md:col-span-4 space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
-                  Sort Order
-                </Label>
+              <div className="md:col-span-4">
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-10 text-sm rounded-xl">
-                    <SelectValue placeholder="Sort By" />
+                  <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium">
+                    <div className="flex items-center gap-2 truncate">
+                      <ArrowUpDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <SelectValue placeholder="Sort By" />
+                    </div>
                   </SelectTrigger>
-                  <SelectContent className="p-2">
+                  <SelectContent className="bg-card border-border text-foreground p-1.5">
                     <SelectItem value="newest">Newest First</SelectItem>
                     <SelectItem value="price_low">Price: Low to High</SelectItem>
                     <SelectItem value="price_high">Price: High to Low</SelectItem>
@@ -358,113 +345,45 @@ export default function ServicesPage() {
               </div>
             </div>
 
-            {/* Bottom Row: Category and Location Selects with Labels */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-border/60">
-              {/* Category */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-primary" />
-                  Category
-                </Label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={(val) => {
-                    setSelectedCategory(val);
-                    setSelectedSubcategory("all");
-                  }}
-                >
-                  <SelectTrigger className="h-10 text-xs md:text-sm rounded-xl">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Divider with Filter Badge */}
+            <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
+              <div className="flex items-center gap-2 font-medium text-muted-foreground">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                <span>Refine by Category & Location</span>
+                {hasActiveFilters && (
+                  <span className="bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
+                    Active
+                  </span>
+                )}
               </div>
-
-              {/* Subcategory */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-primary" />
-                  Subcategory
-                </Label>
-                <Select
-                  value={selectedSubcategory}
-                  onValueChange={setSelectedSubcategory}
-                  disabled={selectedCategory === "all"}
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  <SelectTrigger className="h-10 text-xs md:text-sm rounded-xl">
-                    <SelectValue placeholder="All Subcategories" />
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    <SelectItem value="all">All Subcategories</SelectItem>
-                    {subcategories
-                      .filter((s) => s.category_id === selectedCategory)
-                      .map((sub) => (
-                        <SelectItem key={sub.id} value={sub.id}>
-                          {sub.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Division (বিভাগ) */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  Division (বিভাগ)
-                </Label>
-                <Select
-                  value={selectedDivision}
-                  onValueChange={(val) => {
-                    setSelectedDivision(val);
-                    setSelectedDistrict("all");
-                  }}
-                >
-                  <SelectTrigger className="h-10 text-xs md:text-sm rounded-xl">
-                    <SelectValue placeholder="All Divisions" />
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    <SelectItem value="all">All Divisions (বিভাগ)</SelectItem>
-                    {divisionsList.map((div) => (
-                      <SelectItem key={div.isoCode} value={div.name}>
-                        {div.name} {div.bnName ? `(${div.bnName})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* District / City (জেলা) */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
-                  District (জেলা)
-                </Label>
-                <Select
-                  value={selectedDistrict}
-                  onValueChange={setSelectedDistrict}
-                >
-                  <SelectTrigger className="h-10 text-xs md:text-sm rounded-xl">
-                    <SelectValue placeholder="All Districts" />
-                  </SelectTrigger>
-                  <SelectContent className="p-2">
-                    <SelectItem value="all">All Districts (জেলা)</SelectItem>
-                    {districtsList.map((dist) => (
-                      <SelectItem key={dist.name} value={dist.name}>
-                        {dist.name} {dist.bnName ? `(${dist.bnName})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  Reset all filters
+                </button>
+              )}
             </div>
+
+            {/* Common Category, Subcategory, Division, District Filter */}
+            <CommonTaxonomyLocationFilter
+              categories={categories}
+              subcategories={subcategories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              selectedSubcategory={selectedSubcategory}
+              onSubcategoryChange={setSelectedSubcategory}
+              showLocation={true}
+              selectedDivision={selectedDivision}
+              onDivisionChange={setSelectedDivision}
+              selectedDistrict={selectedDistrict}
+              onDistrictChange={setSelectedDistrict}
+              useDivisionCode={false}
+              divisionLabel="Division (বিভাগ)"
+              districtLabel="District (জেলা)"
+            />
 
             {/* Active filters pill display */}
             {hasActiveFilters && (

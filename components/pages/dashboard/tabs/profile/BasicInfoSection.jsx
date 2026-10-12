@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, User } from "lucide-react";
 import SearchableSelect from "@/components/shared/SearchableSelect";
 
 export default function BasicInfoSection({
@@ -43,13 +43,18 @@ export default function BasicInfoSection({
   return (
     <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-            Basic Information
-          </h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-            Your core public identity across the talent ecosystem
-          </p>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+            <User className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+              Basic Information
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+              Your core public identity across the talent ecosystem
+            </p>
+          </div>
         </div>
       </div>
 

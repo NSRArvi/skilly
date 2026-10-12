@@ -11,6 +11,7 @@ import {
   FaDiscord,
   FaGlobe,
 } from "react-icons/fa";
+import { Share2 } from "lucide-react";
 
 export default function SocialLinksSection({
   socialLinkedin,
@@ -28,13 +29,18 @@ export default function SocialLinksSection({
 }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-5 shadow-sm">
-      <div>
-        <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-          Connected Networks & Presence
-        </h2>
-        <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-          Link your active developer and design channels
-        </p>
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+          <Share2 className="w-4 h-4" />
+        </div>
+        <div>
+          <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+            Connected Networks & Presence
+          </h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+            Link your active developer and design channels
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

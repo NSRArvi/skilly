@@ -6,6 +6,7 @@ import {
   MapPin,
   ExternalLink,
   MessageSquare,
+  Share2,
 } from "lucide-react";
 import {
   FaLinkedin,
@@ -80,7 +81,7 @@ export default function ProfessionalSidebar({
             >
               Hire {profile.full_name?.split(" ")[0] || "Professional"}
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => {
                 if (typeof window !== "undefined") {
@@ -91,14 +92,15 @@ export default function ProfessionalSidebar({
             >
               <MessageSquare className="w-3.5 h-3.5 mr-2" />
               Direct Message
-            </Button>
+            </Button> */}
           </div>
         )}
       </div>
 
       {/* Card 2: Verified Social & Professional Channels */}
       <div className="bg-card border border-border rounded-2xl p-6 space-y-4 shadow-sm">
-        <h3 className="font-bold text-foreground text-base tracking-tight">
+        <h3 className="font-bold text-foreground text-base tracking-tight flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-primary" />
           Social & Online Presence
         </h3>
 

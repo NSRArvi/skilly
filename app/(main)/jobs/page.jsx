@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CommonTaxonomyLocationFilter from "@/components/shared/CommonTaxonomyLocationFilter";
 import {
   Search,
   Briefcase,
@@ -22,6 +23,7 @@ import {
   SlidersHorizontal,
   Plus,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import Link from "next/link";
@@ -145,141 +147,154 @@ export default function JobsPage() {
           </Link>
         </div>
 
-        {/* Filter Bar */}
-        <div className="bg-card border border-border rounded-2xl p-4 md:p-5 mb-8 shadow-sm space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search job title..."
-              className="pl-9 bg-background/50 border-border text-foreground h-10 rounded-xl text-sm"
-            />
-          </div>
+        {/* Unified Minimal & Professional Filter Section */}
+        {(() => {
+          const activeFilterCount = [
+            selectedCategory !== "all",
+            selectedSubcategory !== "all",
+            selectedStatus !== "all",
+            selectedType !== "all",
+            selectedVerified !== "all",
+          ].filter(Boolean).length;
 
-          {/* Filters Row */}
-          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/50">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-1">
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filters</span>
-            </div>
+          const clearAllFilters = () => {
+            setSelectedCategory("all");
+            setSelectedSubcategory("all");
+            setSelectedStatus("all");
+            setSelectedType("all");
+            setSelectedVerified("all");
+            setSearchTerm("");
+          };
 
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                <SelectValue placeholder="Status">
-                  {selectedStatus === "all"
-                    ? "All Status"
-                    : statusConfig[selectedStatus]?.label}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="opening_soon">Opening Soon</SelectItem>
-                <SelectItem value="running">Running</SelectItem>
-                <SelectItem value="over">Over</SelectItem>
-              </SelectContent>
-            </Select>
+          return (
+            <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-8 shadow-sm space-y-4">
+              {/* Row 1: Search + Quick Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                {/* Search Bar */}
+                <div className="md:col-span-5 relative">
+                  <Search className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by job title, skills or keywords..."
+                    className="w-full h-10 pl-10 pr-9 rounded-xl bg-background/60 hover:bg-background border border-border text-foreground text-xs md:text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  />
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                <SelectValue placeholder="Job Type">
-                  {selectedType === "all"
-                    ? "All Types"
-                    : selectedType.replace("-", " ")}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="full-time">Full-Time</SelectItem>
-                <SelectItem value="part-time">Part-Time</SelectItem>
-                <SelectItem value="contract">Contract</SelectItem>
-                <SelectItem value="freelance">Freelance</SelectItem>
-              </SelectContent>
-            </Select>
+                {/* Status Filter */}
+                <div className="md:col-span-2">
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium">
+                      <div className="flex items-center gap-2 truncate">
+                        <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <SelectValue placeholder="Status">
+                          {selectedStatus === "all"
+                            ? "All Status"
+                            : statusConfig[selectedStatus]?.label}
+                        </SelectValue>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="opening_soon">Opening Soon</SelectItem>
+                      <SelectItem value="running">Running</SelectItem>
+                      <SelectItem value="over">Over</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <Select value={selectedVerified} onValueChange={setSelectedVerified}>
-              <SelectTrigger className="h-8 w-[140px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                <SelectValue placeholder="Verification">
-                  {selectedVerified === "all"
-                    ? "All Jobs"
-                    : selectedVerified === "true"
-                    ? "Verified Only"
-                    : "Unverified Only"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border text-foreground">
-                <SelectItem value="all">All Jobs</SelectItem>
-                <SelectItem value="true">Verified Only</SelectItem>
-                <SelectItem value="false">Unverified Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+                {/* Job Type Filter */}
+                <div className="md:col-span-3">
+                  <Select value={selectedType} onValueChange={setSelectedType}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium">
+                      <div className="flex items-center gap-2 truncate">
+                        <Briefcase className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <SelectValue placeholder="Job Type">
+                          {selectedType === "all"
+                            ? "All Types"
+                            : selectedType.replace("-", " ")}
+                        </SelectValue>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="full-time">Full-Time</SelectItem>
+                      <SelectItem value="part-time">Part-Time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="freelance">Freelance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {/* Category pills */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
-            <button
-              onClick={() => {
-                setSelectedCategory("all");
-                setSelectedSubcategory("all");
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                selectedCategory === "all"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              All Categories
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setSelectedSubcategory("all");
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedCategory === cat.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
+                {/* Verification Filter */}
+                <div className="md:col-span-2">
+                  <Select value={selectedVerified} onValueChange={setSelectedVerified}>
+                    <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium">
+                      <div className="flex items-center gap-2 truncate">
+                        <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <SelectValue placeholder="Verification">
+                          {selectedVerified === "all"
+                            ? "All Jobs"
+                            : selectedVerified === "true"
+                            ? "Verified Only"
+                            : "Unverified"}
+                        </SelectValue>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border text-foreground">
+                      <SelectItem value="all">All Jobs</SelectItem>
+                      <SelectItem value="true">Verified Only</SelectItem>
+                      <SelectItem value="false">Unverified</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          {/* Subcategory pills */}
-          {selectedCategory !== "all" && (
-            <div className="flex flex-wrap items-center gap-1.5 pl-4 border-l-2 border-primary/30">
-              <button
-                onClick={() => setSelectedSubcategory("all")}
-                className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
-                  selectedSubcategory === "all"
-                    ? "bg-foreground text-background"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
-                }`}
-              >
-                All in {categories.find((c) => c.id === selectedCategory)?.name}
-              </button>
-              {subcategories
-                .filter((s) => s.category_id === selectedCategory)
-                .map((sub) => (
+              {/* Refine Header Row */}
+              <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
+                <div className="flex items-center gap-2 font-medium text-muted-foreground">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                  <span>Filter by Category & Specialization</span>
+                  {activeFilterCount > 0 && (
+                    <span className="bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
+                      {activeFilterCount} active
+                    </span>
+                  )}
+                </div>
+                {activeFilterCount > 0 && (
                   <button
-                    key={sub.id}
-                    onClick={() => setSelectedSubcategory(sub.id)}
-                    className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
-                      selectedSubcategory === sub.id
-                        ? "bg-foreground text-background"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
-                    }`}
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="font-medium text-primary hover:text-primary/80 transition-colors"
                   >
-                    {sub.name}
+                    Reset all filters
                   </button>
-                ))}
+                )}
+              </div>
+
+              {/* Common Category & Subcategory Filter */}
+              <CommonTaxonomyLocationFilter
+                categories={categories}
+                subcategories={subcategories}
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                selectedSubcategory={selectedSubcategory}
+                onSubcategoryChange={setSelectedSubcategory}
+                showLocation={false}
+              />
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         {/* Job Listings */}
         {loading ? (

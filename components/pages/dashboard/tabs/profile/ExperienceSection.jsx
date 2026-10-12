@@ -9,19 +9,23 @@ import { Briefcase, Plus, X } from "lucide-react";
 export default function ExperienceSection({ experience, setExperience }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
-      <div>
-        <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-          Work Experience
-        </h2>
-        <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-          Highlight your professional background and previous roles
-        </p>
+      <div className="flex items-center gap-2.5">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+          <Briefcase className="w-4 h-4" />
+        </div>
+        <div>
+          <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+            Work Experience
+          </h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+            Highlight your professional background and previous roles
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between border-b border-border/70 pb-2">
-          <span className="text-sm font-bold text-foreground flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-primary" />
+          <span className="text-sm font-bold text-foreground">
             Work History
           </span>
           <Button

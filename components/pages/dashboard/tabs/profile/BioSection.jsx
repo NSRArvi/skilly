@@ -9,6 +9,7 @@ import {
   ListOrdered,
   Code,
   Quote,
+  FileText,
 } from "lucide-react";
 
 export default function BioSection({ aboutText, setAboutText }) {
@@ -46,13 +47,18 @@ export default function BioSection({ aboutText, setAboutText }) {
   return (
     <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-            About & Biography
-          </h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-            Highlight your background, philosophy, and proven deliverables
-          </p>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+              About & Biography
+            </h2>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+              Highlight your background, philosophy, and proven deliverables
+            </p>
+          </div>
         </div>
         <span className="text-xs text-muted-foreground font-medium pt-1">
           Markdown Supported

@@ -5,7 +5,7 @@ import Container from "@/components/shared/Container";
 import ProfessionalsCard from "@/components/pages/home/ProfessionalsCard";
 import { createClient } from "@/lib/client";
 import { fetchCountries, fetchStates, fetchCities } from "@/lib/locations";
-import { SlidersHorizontal, ArrowUpDown, MapPin, Search, X, Loader2 } from "lucide-react";
+import { SlidersHorizontal, ArrowUpDown, MapPin, Search, X, Loader2, ShieldCheck } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CommonTaxonomyLocationFilter from "@/components/shared/CommonTaxonomyLocationFilter";
 
 const PAGE_SIZE = 12;
 
@@ -201,8 +202,7 @@ export default function ProfessionalsPage() {
     <div className="min-h-screen bg-background py-10 md:py-16" suppressHydrationWarning>
       <Container>
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-6">
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
                 Find Professionals
@@ -211,200 +211,121 @@ export default function ProfessionalsPage() {
                 {!loading && `${professionals.length}${hasMore ? "+" : ""} professionals available`}
               </p>
             </div>
+          </div>
 
-            {/* Search + Sort Row */}
-            <div className="flex items-center gap-3">
-              {/* Search */}
-              <div className="relative flex-1 md:w-[260px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {/* Unified Minimal & Professional Filter Section */}
+          <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 mb-8">
+            {/* Row 1: Primary Search + Quick Filters (Verification, Sort) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+              {/* Search Bar */}
+              <div className="md:col-span-6 lg:col-span-6 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name..."
-                  className="w-full h-9 pl-9 pr-8 rounded-xl bg-card border border-border text-foreground text-xs font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  placeholder="Search by name, skills or keywords..."
+                  className="w-full h-10 pl-10 pr-9 rounded-xl bg-background/60 hover:bg-background border border-border text-foreground text-xs md:text-sm font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
                 />
                 {searchQuery && (
                   <button
+                    type="button"
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5 rounded-full transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
-              
-              {/* Filter by Verification */}
-              <Select value={selectedVerified} onValueChange={setSelectedVerified}>
-                <SelectTrigger className="h-9 w-[160px] rounded-xl bg-card border-border text-xs font-semibold">
-                  <SelectValue placeholder="Verification">
-                    {selectedVerified === "all" ? "All Profiles" : selectedVerified === "true" ? "Verified Only" : "Unverified Only"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
-                  <SelectItem value="all">All Profiles</SelectItem>
-                  <SelectItem value="true">Verified Only</SelectItem>
-                  <SelectItem value="false">Unverified Only</SelectItem>
-                </SelectContent>
-              </Select>
 
-              {/* Sort */}
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-9 w-[160px] rounded-xl bg-card border-border text-xs font-semibold gap-1.5">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <SelectValue placeholder="Sort">
-                    {sortBy === "popular" ? "Most Popular" : sortBy === "latest" ? "Latest" : "Default"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border text-foreground">
-                  <SelectItem value="default">Default</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
-                  <SelectItem value="latest">Latest</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Verification Filter */}
+              <div className="md:col-span-3 lg:col-span-3">
+                <Select value={selectedVerified} onValueChange={setSelectedVerified}>
+                  <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium">
+                    <div className="flex items-center gap-2 truncate">
+                      <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <SelectValue placeholder="Verification">
+                        {selectedVerified === "all"
+                          ? "All Profiles"
+                          : selectedVerified === "true"
+                          ? "Verified Only"
+                          : "Unverified Only"}
+                      </SelectValue>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border text-foreground">
+                    <SelectItem value="all">All Profiles</SelectItem>
+                    <SelectItem value="true">Verified Only</SelectItem>
+                    <SelectItem value="false">Unverified Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Sort Filter */}
+              <div className="md:col-span-3 lg:col-span-3">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-10 rounded-xl bg-background/60 hover:bg-background border-border text-xs md:text-sm font-medium gap-1.5">
+                    <div className="flex items-center gap-2 truncate">
+                      <ArrowUpDown className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <SelectValue placeholder="Sort by">
+                        {sortBy === "popular"
+                          ? "Most Popular"
+                          : sortBy === "latest"
+                          ? "Latest First"
+                          : "Default Order"}
+                      </SelectValue>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border text-foreground">
+                    <SelectItem value="default">Default Order</SelectItem>
+                    <SelectItem value="popular">Most Popular</SelectItem>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          {/* Filter Bar */}
-          <div className="bg-card border border-border rounded-2xl p-4 md:p-5 space-y-4">
-            {/* Top row: Category pills + active filter info */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <SlidersHorizontal className="w-4 h-4" />
-                <span>Filters</span>
+            {/* Divider with Filter Badge */}
+            <div className="flex items-center justify-between pt-1 border-t border-border/50 text-xs">
+              <div className="flex items-center gap-2 font-medium text-muted-foreground">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-primary" />
+                <span>Refine by Category & Location</span>
                 {activeFilterCount > 0 && (
-                  <span className="bg-primary text-primary-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                    {activeFilterCount}
+                  <span className="bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
+                    {activeFilterCount} active
                   </span>
                 )}
               </div>
               {activeFilterCount > 0 && (
                 <button
+                  type="button"
                   onClick={clearAllFilters}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Clear All
+                  Reset all filters
                 </button>
               )}
             </div>
 
-            {/* Category pills */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => { setSelectedCategory("all"); setSelectedSubcategory("all"); }}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  selectedCategory === "all"
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                All Categories
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.id);
-                    setSelectedSubcategory("all");
-                  }}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    selectedCategory === cat.id
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "bg-muted/60 border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Subcategory pills */}
-            {selectedCategory !== "all" && (
-              <div className="flex flex-wrap items-center gap-1.5 pl-4 border-l-2 border-primary/30">
-                <button
-                  onClick={() => setSelectedSubcategory("all")}
-                  className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
-                    selectedSubcategory === "all"
-                      ? "bg-foreground text-background"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
-                  }`}
-                >
-                  All in {categories.find(c => c.id === selectedCategory)?.name}
-                </button>
-                {subcategories
-                  .filter(sub => sub.category_id === selectedCategory)
-                  .map(sub => (
-                    <button
-                      key={sub.id}
-                      onClick={() => setSelectedSubcategory(sub.id)}
-                      className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
-                        selectedSubcategory === sub.id
-                          ? "bg-foreground text-background"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted border border-border/40"
-                      }`}
-                    >
-                      {sub.name}
-                    </button>
-                  ))}
-              </div>
-            )}
-
-            {/* Location row */}
-            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/40">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-1">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Location</span>
-              </div>
-
-              {/* <div className="w-[170px]"> */}
-                <Select
-                  value={selectedState}
-                  onValueChange={(val) => {
-                    setSelectedState(val);
-                    setSelectedCity("all");
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-[170px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                    <SelectValue placeholder="All Divisions">
-                      {selectedState === "all"
-                        ? "All Divisions"
-                        : statesList.find((s) => s.isoCode === selectedState)?.name || selectedState}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border text-foreground p-2">
-                    <SelectItem value="all">All Divisions</SelectItem>
-                    {statesList.map((s) => (
-                      <SelectItem key={s.isoCode} value={s.isoCode}>
-                        {s.name} {s.bnName ? `(${s.bnName})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              {/* </div> */}
-
-              {/* <div className="w-[170px]"> */}
-                <Select
-                  value={selectedCity}
-                  onValueChange={setSelectedCity}
-                >
-                  <SelectTrigger className="h-8 w-[170px] rounded-lg bg-background/60 border-border/60 text-[11px] font-semibold">
-                    <SelectValue placeholder="All Districts">
-                      {selectedCity === "all" ? "All Districts" : selectedCity}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border text-foreground max-h-60 p-2">
-                    <SelectItem value="all">All Districts</SelectItem>
-                    {citiesList.map((c) => (
-                      <SelectItem key={c.name} value={c.name}>
-                        {c.name} {c.bnName ? `(${c.bnName})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              {/* </div> */}
-            </div>
+            {/* Common Category, Subcategory, Division, District Filter */}
+            <CommonTaxonomyLocationFilter
+              categories={categories}
+              subcategories={subcategories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              selectedSubcategory={selectedSubcategory}
+              onSubcategoryChange={setSelectedSubcategory}
+              showLocation={true}
+              selectedDivision={selectedState}
+              onDivisionChange={(val) => {
+                setSelectedState(val);
+                setSelectedCity("all");
+              }}
+              selectedDistrict={selectedCity}
+              onDistrictChange={setSelectedCity}
+              useDivisionCode={true}
+            />
           </div>
-        </div>
 
         {/* Results Grid */}
         {loading ? (

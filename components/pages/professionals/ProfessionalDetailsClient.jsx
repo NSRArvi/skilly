@@ -14,6 +14,8 @@ import {
   Share2,
   Pencil,
   Briefcase,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -570,13 +572,18 @@ export default function ProfessionalDetailsClient({
             {/* Card 1: About & Experience */}
             <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-                    About & Experience
-                  </h2>
-                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                    Highlighting background, philosophy, and proven deliverables
-                  </p>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+                      About & Experience
+                    </h2>
+                    <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                      Highlighting background, philosophy, and proven deliverables
+                    </p>
+                  </div>
                 </div>
                 {isVerified ? (
                   <span className="px-2 py-0.5 rounded text-[11px] font-mono tracking-widest font-semibold border border-primary/40 text-primary bg-primary/5 uppercase">
@@ -608,13 +615,18 @@ export default function ProfessionalDetailsClient({
 
             {/* Core Skills Section */}
             <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
-                  Core Skill Sets & Specializations
-                </h2>
-                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  High-value technical competencies and matched roles
-                </p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+                    Core Skill Sets & Specializations
+                  </h2>
+                  <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                    High-value technical competencies and matched roles
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-3">

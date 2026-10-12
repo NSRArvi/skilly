@@ -11,14 +11,18 @@ export default function ProfessionalCareerSection({ profile }) {
       {/* Work Experience Timeline */}
       {profile.experience && profile.experience.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-primary" />
-              Work Experience & Career History
-            </h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Demonstrated track record of real-world industry delivery
-            </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <Briefcase className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+                Work Experience & Career History
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Demonstrated track record of real-world industry delivery
+              </p>
+            </div>
           </div>
 
           <div className="relative border-l-2 border-primary/30 pl-5 space-y-6 ml-2">
@@ -50,14 +54,18 @@ export default function ProfessionalCareerSection({ profile }) {
       {/* Education & Degrees */}
       {profile.education && profile.education.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-primary" />
-              Education & Degrees
-            </h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Academic qualifications and verified educational institutions
-            </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <GraduationCap className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+                Education & Degrees
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Academic qualifications and verified educational institutions
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -86,14 +94,18 @@ export default function ProfessionalCareerSection({ profile }) {
       {/* Courses & Certifications */}
       {profile.courses && profile.courses.length > 0 && (
         <div className="bg-card border border-border rounded-2xl p-6 md:p-7 space-y-6 shadow-sm">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-primary" />
-              Courses & Certifications
-            </h2>
-            <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-              Specialized training programs and industry accreditations
-            </p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary flex-shrink-0">
+              <BookOpen className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-lg md:text-xl font-bold text-foreground tracking-tight">
+                Courses & Certifications
+              </h2>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Specialized training programs and industry accreditations
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

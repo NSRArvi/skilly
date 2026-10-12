@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check, X } from "lucide-react";
+import { twMerge } from "tailwind-merge";
 
 /**
  * SearchableSelect
@@ -26,6 +27,8 @@ export default function SearchableSelect({
   disabled = false,
   emptyMessage = "No results found",
   className = "",
+  triggerClassName = "",
+  icon: Icon = null,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -86,17 +89,24 @@ export default function SearchableSelect({
         onClick={() => {
           if (!disabled) setIsOpen((prev) => !prev);
         }}
-        className={`w-full flex items-center justify-between px-3 h-10 rounded-xl border text-sm transition-all text-left outline-none ${
+        className={twMerge(
+          "w-full flex items-center justify-between px-3 h-10 rounded-xl border text-sm transition-all text-left outline-none",
           disabled
             ? "bg-muted/40 text-muted-foreground/50 border-border/50 cursor-not-allowed opacity-60"
             : isOpen
             ? "bg-background border-primary ring-1 ring-primary text-foreground shadow-sm"
-            : "bg-background/50 hover:bg-background border-border text-foreground hover:border-border/80"
-        }`}
+            : "bg-background/50 hover:bg-background border-border text-foreground hover:border-border/80",
+          triggerClassName
+        )}
       >
-        <span className={`truncate mr-2 ${!selectedItem ? "text-muted-foreground" : "font-medium"}`}>
-          {selectedItem ? selectedItem.name : placeholder}
-        </span>
+        <div className="flex items-center gap-2 truncate mr-2 min-w-0">
+          {Icon && (
+            <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+          )}
+          <span className={`truncate ${!selectedItem ? "text-muted-foreground" : "font-medium"}`}>
+            {selectedItem ? selectedItem.name : placeholder}
+          </span>
+        </div>
         <div className="flex items-center gap-1.5 shrink-0 text-muted-foreground">
           {selectedItem && !disabled && (
             <span
